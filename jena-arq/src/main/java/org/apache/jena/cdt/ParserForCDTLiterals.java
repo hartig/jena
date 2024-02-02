@@ -18,7 +18,6 @@
 
 package org.apache.jena.cdt;
 
-import java.io.InputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -28,15 +27,23 @@ import java.util.Map;
 import org.apache.jena.cdt.parser.CDTLiteralParser;
 import org.apache.jena.cdt.parser.ParseException;
 import org.apache.jena.graph.Node;
+import org.apache.jena.riot.system.ErrorHandlerFactory;
+import org.apache.jena.riot.system.FactoryRDF;
+import org.apache.jena.riot.system.ParserProfile;
 import org.apache.jena.riot.system.RiotLib;
 import org.apache.jena.ttl.turtle.parser.TokenMgrError;
-import org.apache.jena.util.FileUtils;
 
 public class ParserForCDTLiterals
 {
 	public static List<CDTValue> parseListLiteral( final String lex, final boolean recursive ) {
+		return parseListLiteral( RiotLib.factoryRDF(), lex, recursive );
+	}
+
+	public static List<CDTValue> parseListLiteral( final FactoryRDF factory, final String lex, final boolean recursive ) {
+System.out.println("parseListLiteral: " + lex);
 		final Reader reader = new StringReader(lex);
-		final List<CDTValue> result = parseListLiteral(reader, recursive);
+		final List<CDTValue> result = parseListLiteral(factory, reader, recursive);
+System.out.println();
 
 		try { reader.close(); } catch ( final IOException e ) {
 			throw new CDTLiteralParseException("Closing the reader caused an exception.", e);
@@ -45,22 +52,17 @@ public class ParserForCDTLiterals
 		return result;
 	}
 
-	public static List<CDTValue> parseListLiteral( final InputStream in, final boolean recursive ) {
-		final Reader reader = FileUtils.asUTF8(in);
-		final List<CDTValue> result = parseListLiteral(reader, recursive);
-
-		try { reader.close(); } catch ( final IOException ex ) {
-			throw new CDTLiteralParseException("Closing the reader caused an exception.", ex);
-		}
-
-		return result;
+	public static List<CDTValue> parseListLiteral( final Reader reader, final boolean recursive ) {
+		return parseListLiteral( RiotLib.factoryRDF(), reader, recursive );
 	}
 
-	public static List<CDTValue> parseListLiteral( final Reader reader, final boolean recursive ) {
+	public static List<CDTValue> parseListLiteral( final FactoryRDF factory, final Reader reader, final boolean recursive ) {
+		final ParserProfile pp = RiotLib.createParserProfile( factory, ErrorHandlerFactory.errorHandlerStd, true );
+		final CDTLiteralParser parser = new CDTLiteralParser(reader);
+		parser.setProfile(pp);
+
 		final List<CDTValue> list;
 		try {
-			final CDTLiteralParser parser = new CDTLiteralParser(reader);
-			parser.setProfile( RiotLib.dftProfile() );
 			list = parser.List();
 		}
 		catch ( final ParseException | TokenMgrError ex ) {
@@ -99,17 +101,6 @@ public class ParserForCDTLiterals
 
 		try { reader.close(); } catch ( final IOException e ) {
 			throw new CDTLiteralParseException("Closing the reader caused an exception.", e);
-		}
-
-		return result;
-	}
-
-	public static Map<CDTKey,CDTValue> parseMapLiteral( final InputStream in, final boolean recursive ) {
-		final Reader reader = FileUtils.asUTF8(in);
-		final Map<CDTKey,CDTValue> result = parseMapLiteral(reader, recursive);
-
-		try { reader.close(); } catch ( final IOException ex ) {
-			throw new CDTLiteralParseException("Closing the reader caused an exception.", ex);
 		}
 
 		return result;
