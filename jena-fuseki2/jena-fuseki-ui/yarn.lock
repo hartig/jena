@@ -368,9 +368,9 @@
     uuid "^8.3.2"
 
 "@cypress/vue@^6.0.0":
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/@cypress/vue/-/vue-6.0.0.tgz#db89b09260be21d2cb4faa2e5a86e584f346c929"
-  integrity sha512-KMfRw8y/kXn/RJqaDdFnYnW7YLk47313UE3Yip+sLDjILJ2kA0WEiEa6MYKe58v8TNRtwcRpUH5xAYVNs1N6/A==
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/@cypress/vue/-/vue-6.0.1.tgz#a6087b9b2a320db28525a51d0c14684b9908c4d6"
+  integrity sha512-pXzy6ZsYzWORHqSeXticZgZn9st22Rv1WSeWLYSrilz1+Zxe1qcdn9812qYY1v23nlikgOktvQYbMFQhv0FZSA==
 
 "@cypress/webpack-preprocessor@^6.0.0":
   version "6.0.0"
@@ -918,9 +918,9 @@
   integrity sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==
 
 "@vitejs/plugin-vue@^5.0.3":
-  version "5.0.4"
-  resolved "https://registry.yarnpkg.com/@vitejs/plugin-vue/-/plugin-vue-5.0.4.tgz#508d6a0f2440f86945835d903fcc0d95d1bb8a37"
-  integrity sha512-WS3hevEszI6CEVEx28F8RjTX97k3KsrcY6kvTg7+Whm5y3oYvcqzVeGCU3hxSAn4uY2CLCkeokkGKpoctccilQ==
+  version "5.0.5"
+  resolved "https://registry.yarnpkg.com/@vitejs/plugin-vue/-/plugin-vue-5.0.5.tgz#e3dc11e427d4b818b7e3202766ad156e3d5e2eaa"
+  integrity sha512-LOjm7XeIimLBZyzinBQ6OSm3UBCNVCpLkxGC0oWmm2YPzVZoxMsdvNVimLTBzpAnR9hl/yn1SHGuRfe6/Td9rQ==
 
 "@vitest/coverage-v8@^1.6.0":
   version "1.6.0"
@@ -4318,9 +4318,9 @@ node-releases@^2.0.14:
   integrity sha512-y10wOWt8yZpqXmOgRo77WaHEmhYQYGNA6y421PKsKYWEK8aW+cqAphborZDhqfyKrbZEN92CN1X2KbafY2s7Yw==
 
 nodemon@^3.0.1:
-  version "3.1.1"
-  resolved "https://registry.yarnpkg.com/nodemon/-/nodemon-3.1.1.tgz#779631d9da3a7f8a995b16976c87621818c19a8d"
-  integrity sha512-k43xGaDtaDIcufn0Fc6fTtsdKSkV/hQzoQFigNH//GaKta28yoKVYXCnV+KXRqfT/YzsFaQU9VdeEG+HEyxr6A==
+  version "3.1.3"
+  resolved "https://registry.yarnpkg.com/nodemon/-/nodemon-3.1.3.tgz#dcce9ee0aa7d19cd4dcd576ae9a0456d9078b286"
+  integrity sha512-m4Vqs+APdKzDFpuaL9F9EVOF85+h070FnkHVEoU4+rmT6Vw0bmNl7s61VEkY/cJkL7RCv1p4urnUDUMrS5rk2w==
   dependencies:
     chokidar "^3.5.2"
     debug "^4"
@@ -5078,9 +5078,9 @@ safe-regex-test@^1.0.0:
   integrity sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==
 
 sass@^1.69.4:
-  version "1.77.2"
-  resolved "https://registry.yarnpkg.com/sass/-/sass-1.77.2.tgz#18d4ed2eefc260cdc8099c5439ec1303fd5863aa"
-  integrity sha512-eb4GZt1C3avsX3heBNlrc7I09nyT00IUuo4eFhAbeXWU2fvA7oXI53SxODVAA+zgZCk9aunAZgO+losjR3fAwA==
+  version "1.77.5"
+  resolved "https://registry.yarnpkg.com/sass/-/sass-1.77.5.tgz#5f9009820297521356e962c0bed13ee36710edfe"
+  integrity sha512-oDfX1mukIlxacPdQqNb6mV2tVCrnE+P3nVYioy72V5tlk56CPNcO4TCuFcaCRKKfJ1M3lH95CleRS+dVKL2qMg==
   dependencies:
     chokidar ">=3.0.0 <4.0.0"
     immutable "^4.0.0"
@@ -5840,9 +5840,9 @@ vite-plugin-istanbul@^6.0.2:
     test-exclude "^6.0.0"
 
 vite@^5.0.0, vite@^5.0.12:
-  version "5.2.12"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-5.2.12.tgz#3536c93c58ba18edea4915a2ac573e6537409d97"
-  integrity sha512-/gC8GxzxMK5ntBwb48pR32GGhENnjtY30G4A0jemunsBkiEZFw60s8InGpN8gkhHEkjnRK1aSAxeQgwvFhUHAA==
+  version "5.2.13"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-5.2.13.tgz#945ababcbe3d837ae2479c29f661cd20bc5e1a80"
+  integrity sha512-SSq1noJfY9pR3I1TUENL3rQYDQCFqgD+lM6fTRAM8Nv6Lsg5hDLaXkjETVeBt+7vZBCMoibD+6IWnT2mJ+Zb/A==
   dependencies:
     esbuild "^0.20.1"
     postcss "^8.4.38"
@@ -5895,9 +5895,9 @@ vue-eslint-parser@^9.4.2:
     semver "^7.3.6"
 
 vue-router@^4.2.5:
-  version "4.3.2"
-  resolved "https://registry.yarnpkg.com/vue-router/-/vue-router-4.3.2.tgz#08096c7765dacc6832f58e35f7a081a8b34116a7"
-  integrity sha512-hKQJ1vDAZ5LVkKEnHhmm1f9pMiWIBNGF5AwU67PdH7TyXCj/a4hTccuUuYCAMgJK6rO/NVYtQIEN3yL8CECa7Q==
+  version "4.3.3"
+  resolved "https://registry.yarnpkg.com/vue-router/-/vue-router-4.3.3.tgz#7505509d429a36694b12ba1f6530016c5ce5f6bf"
+  integrity sha512-8Q+u+WP4N2SXY38FDcF2H1dUEbYVHVPtPCPZj/GTZx8RCbiB8AtJP9+YIxn4Vs0svMTNQcLIzka4GH7Utkx9xQ==
   dependencies:
     "@vue/devtools-api" "^6.5.1"
 
