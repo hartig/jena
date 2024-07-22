@@ -62,21 +62,21 @@
     <ver.log4j2>2.23.1</ver.log4j2>
 
     <!-- JSON-LD 1.1 -->
-    <ver.titanium-json-ld>1.4.0</ver.titanium-json-ld>
+    <ver.titanium-json-ld>1.4.1</ver.titanium-json-ld>
     <ver.jakarta.json>2.0.1</ver.jakarta.json>
 
     <!-- These two must be in-step -->
-    <ver.jetty>12.0.9</ver.jetty>
+    <ver.jetty>12.0.11</ver.jetty>
     <ver.jakarta-servlet>6.0.0</ver.jakarta-servlet>
 
-    <ver.shiro>2.0.0</ver.shiro>
+    <ver.shiro>2.0.1</ver.shiro>
 
-    <ver.protobuf>4.27.0</ver.protobuf>
+    <ver.protobuf>4.27.2</ver.protobuf>
     <ver.libthrift>0.20.0</ver.libthrift>
 
     <ver.caffeine>3.1.8</ver.caffeine>
     <!-- Most of Jena uses other libraries for equivalent functionality. -->
-    <ver.guava>33.2.0-jre</ver.guava>
+    <ver.guava>33.2.1-jre</ver.guava>
 
     <ver.gson>2.11.0</ver.gson>
     <ver.lucene>9.10.0</ver.lucene>
@@ -86,18 +86,18 @@
     <ver.commons-lang3>3.14.0</ver.commons-lang3>
     <ver.commons-rdf>0.5.0</ver.commons-rdf>
     <ver.commons-csv>1.11.0</ver.commons-csv>
-    <ver.commons-codec>1.17.0</ver.commons-codec>
+    <ver.commons-codec>1.17.1</ver.commons-codec>
     <ver.commons-compress>1.26.2</ver.commons-compress>
     <ver.commons-collections>4.4</ver.commons-collections>
     <ver.commons-fileupload>2.0.0-M2</ver.commons-fileupload>
 
     <ver.dexxcollection>0.7</ver.dexxcollection>
-    <ver.micrometer>1.13.0</ver.micrometer>
+    <ver.micrometer>1.13.2</ver.micrometer>
     <ver.roaringbitmap>1.0.6</ver.roaringbitmap>
 
     <!-- Testing -->
     <ver.junit4>4.13.2</ver.junit4>
-    <ver.junit5>5.10.2</ver.junit5>
+    <ver.junit5>5.10.3</ver.junit5>
     <ver.junit5-platform>1.10.2</ver.junit5-platform>
  
     <ver.mockito>5.12.0</ver.mockito>
@@ -105,7 +105,7 @@
     <ver.contract.tests>0.2.0</ver.contract.tests>
 
     <!-- For testing, not shipped -->
-    <ver.graalvm>23.0.4</ver.graalvm>
+    <ver.graalvm>23.0.5</ver.graalvm>
     <ver.org.openjdk.jmh>1.37</ver.org.openjdk.jmh>
 
     <!-- GeoSPARQL related -->
