@@ -24,7 +24,7 @@
   <parent>
     <groupId>org.apache.jena</groupId>
     <artifactId>jena</artifactId>
-    <version>5.1.0-SNAPSHOT</version>
+    <version>5.3.0-SNAPSHOT</version>
   </parent>
 
   <description>SPARQL 1.1 query engine and RDF parsers for Apache Jena</description>
@@ -39,14 +39,14 @@
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-core</artifactId>
-      <version>5.1.0-SNAPSHOT</version>
+      <version>5.3.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-core</artifactId>
       <classifier>tests</classifier>
-      <version>5.1.0-SNAPSHOT</version>
+      <version>5.3.0-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
 
@@ -54,7 +54,7 @@
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-base</artifactId>
       <classifier>tests</classifier>
-      <version>5.1.0-SNAPSHOT</version>
+      <version>5.3.0-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
 
@@ -103,16 +103,17 @@
       <artifactId>commons-lang3</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>org.graalvm.js</groupId>
-      <artifactId>js</artifactId>
-      <scope>test</scope>
-    </dependency>
-
+    <!-- Testing only -->
     <dependency>
       <groupId>org.graalvm.js</groupId>
       <artifactId>js-scriptengine</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.graalvm.js</groupId>
+      <artifactId>js-community</artifactId>
+      <scope>test</scope>
+      <type>pom</type>
     </dependency>
 
     <dependency>
@@ -124,6 +125,12 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-params</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-suite-engine</artifactId>
       <scope>test</scope>
     </dependency>
 

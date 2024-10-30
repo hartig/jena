@@ -40,4 +40,7 @@ sed -e 's/@SuppressWarnings("serial")//' \
     < $F > F
 mv F $F
 
+echo "---- Producing text form"
+jjdoc -TEXT=true -OUTPUT_FILE=${FILE%%.jj}.txt "${FILE}"
+
 echo "---- Done"

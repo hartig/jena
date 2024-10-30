@@ -30,9 +30,13 @@ import org.apache.jena.sparql.core.Transactional;
 import org.apache.jena.sparql.core.TransactionalLock;
 import org.apache.jena.sparql.exec.http.QuerySendMode;
 import org.apache.jena.sparql.exec.http.UpdateSendMode;
+import org.apache.jena.sys.JenaSystem;
 
 /** Builder class for {@link RDFLinkHTTP} */
 public class RDFLinkHTTPBuilder {
+
+    static { JenaSystem.init(); }
+
     /*package*/ static String SameAsDestination  = "";
 
     protected Transactional txnLifecycle  = TransactionalLock.createMRPlusSW();
@@ -91,6 +95,7 @@ public class RDFLinkHTTPBuilder {
         parseCheckUpdates   = base.parseCheckUpdates;
 
         querySendMode       = base.querySendMode;
+        updateSendMode      = base.updateSendMode;
     }
 
     /** URL of the remote SPARQL endpoint.

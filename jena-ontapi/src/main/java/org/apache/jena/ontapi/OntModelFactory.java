@@ -47,9 +47,7 @@ import org.apache.jena.vocabulary.XSD;
 import java.util.Objects;
 
 /**
- * A factory to produce {@link OntModel OWL2 model}s, {@link Model Common model}s and {@link Graph graph}s.
- * Currently, OWL2 models support only direct semantic with no additional entailment reasoning.
- * This corresponds to {@link org.apache.jena.ontology.OntModelSpec#OWL_MEM OWL_MEM spec} for {@link org.apache.jena.ontology.OntModel Jena OWL model}.
+ * A factory to produce {@link OntModel Ontolofy model}s.
  */
 public class OntModelFactory {
 
@@ -133,7 +131,7 @@ public class OntModelFactory {
      * @return {@link OntModel}
      */
     public static OntModel createModel(Graph graph) {
-        return createModel(graph, OntSpecification.OWL2_DL_MEM_BUILTIN_INF).setNsPrefixes(STANDARD);
+        return createModel(graph, OntSpecification.OWL2_DL_MEM_BUILTIN_RDFS_INF).setNsPrefixes(STANDARD);
     }
 
     /**
@@ -199,7 +197,7 @@ public class OntModelFactory {
     }
 
     /**
-     * Creates Ontology Model associated with {@link OntSpecification#OWL2_DL_MEM_BUILTIN_INF} spec.
+     * Creates Ontology Model associated with {@link OntSpecification#OWL2_DL_MEM_BUILTIN_RDFS_INF} spec.
      * The {@code repository} manages all the dependencies.
      * See {@link #createModel(Graph, OntSpecification, GraphRepository)}.
      *
@@ -211,7 +209,7 @@ public class OntModelFactory {
     public static OntModel createModel(String uri, GraphRepository repository) {
         return createModel(
                 createOntGraph(uri != null ? NodeFactory.createURI(uri) : NodeFactory.createBlankNode(), repository),
-                OntSpecification.OWL2_DL_MEM_BUILTIN_INF,
+                OntSpecification.OWL2_DL_MEM_BUILTIN_RDFS_INF,
                 repository
         ).setNsPrefixes(STANDARD);
     }

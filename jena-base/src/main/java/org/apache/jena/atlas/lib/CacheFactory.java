@@ -18,9 +18,9 @@
 
 package org.apache.jena.atlas.lib ;
 
-import java.util.function.BiConsumer;
+import org.apache.jena.atlas.lib.cache.*;
 
-import org.apache.jena.atlas.lib.cache.* ;
+import java.util.function.BiConsumer;
 
 public class CacheFactory {
     /**
@@ -43,6 +43,18 @@ public class CacheFactory {
         // Choice point. Add a Guava dependency and ...
         //return new CacheGuava<>(maxSize, dropHandler) ;
         return new CacheCaffeine<>(maxSize, dropHandler) ;
+    }
+
+    public static <Key, Value> Cache<Key, Value> createCache(int maxSize, double initialCapacityFactor) {
+        return new CacheCaffeine<>(maxSize, null, initialCapacityFactor) ;
+    }
+
+    /**
+     * Create a cache which has space for up to a certain number of objects and with a configurable initial capacity.
+     */
+    public static <Key, Value> Cache<Key, Value> createCache(int maxSize, BiConsumer<Key, Value> dropHandler,
+                                                             double initialCapacityFactor) {
+        return new CacheCaffeine<>(maxSize, dropHandler, initialCapacityFactor) ;
     }
 
     /** Wrap an existing Caffeine cache */
@@ -68,7 +80,7 @@ public class CacheFactory {
      * This cache is not thread-safe.
      */
     public static <Key, Value> Cache<Key, Value> createSimpleCache(int size) {
-        return new CacheSimple<>(size, null) ;
+        return new CacheSimple<>(size) ;
     }
 
     /** One slot cache */

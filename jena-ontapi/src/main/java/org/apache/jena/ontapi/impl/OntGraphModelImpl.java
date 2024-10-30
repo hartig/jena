@@ -111,8 +111,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Base model ONT-API implementation to work through jena only.
- * This is an analogue of {@link org.apache.jena.ontology.impl.OntModelImpl} to work in accordance with OWL2 DL specification.
+ * Implementation of a model that can process general ontologies in OWL and similar languages.
+ * Class {@link OntPersonality} is responsible for the configuration of the model.
+ * Also see {@link OntModelControls} - a set of settings,
+ * that can be accessed through {@link OntPersonality#getConfig()}.
  *
  * @see UnionGraph
  */
@@ -264,7 +266,7 @@ public class OntGraphModelImpl extends ModelCom implements OntModel, OntEnhGraph
             return testIsOWLClass(model, candidate);
         }
         OntClass clazz = model.safeFindNodeAs(candidate, OntClass.class);
-        return clazz != null && clazz.asAssertionClass() != null;
+        return clazz != null && clazz.canAsAssertionClass();
     }
 
     private static <M extends OntModel & OntEnhGraph> boolean testIsOWLClass(M model, Node candidate) {
@@ -366,7 +368,7 @@ public class OntGraphModelImpl extends ModelCom implements OntModel, OntEnhGraph
     @Override
     public OntIndividual createIndividual(String uri, OntClass type) {
         if (uri == null) {
-            checkFeature(this, OntModelControls.ALLOW_ANONYMOUS_INDIVIDUALS, "anonymous-individuals");
+            checkType(OntIndividual.Anonymous.class);
         }
         return OntModel.super.createIndividual(uri, type);
     }
@@ -670,10 +672,6 @@ public class OntGraphModelImpl extends ModelCom implements OntModel, OntEnhGraph
     /**
      * Returns an {@code ExtendedIterator} over all individuals
      * that participate in class assertion statement {@code a rdf:type C}.
-     * <b>Note:</b> this method behaves differently than
-     * the method {@link org.apache.jena.ontology.impl.OntModelImpl#listIndividuals()}!
-     * The Jena's method does not verify that the right side of the class-assertion is indeed a valid class expression;
-     * it checks only several well-known cases.
      *
      * @return {@link ExtendedIterator} of {@link OntIndividual}s
      */
@@ -967,26 +965,46 @@ public class OntGraphModelImpl extends ModelCom implements OntModel, OntEnhGraph
 
     @Override
     public OntDisjoint.Classes createDisjointClasses(Collection<OntClass> classes) {
+        if (classes.isEmpty()) {
+            throw new IllegalArgumentException("Empty list is specified");
+        }
         checkType(OntDisjoint.Classes.class);
-        return OntDisjointImpl.createDisjointClasses(this, classes.stream());
+        return checkCreate(model ->
+                OntDisjointImpl.createDisjointClasses(model, classes.stream()), OntDisjoint.Classes.class
+        );
     }
 
     @Override
     public OntDisjoint.Individuals createDifferentIndividuals(Collection<OntIndividual> individuals) {
+        if (individuals.isEmpty()) {
+            throw new IllegalArgumentException("Empty list is specified");
+        }
         checkType(OntDisjoint.Individuals.class);
-        return OntDisjointImpl.createDifferentIndividuals(this, individuals.stream());
+        return checkCreate(model ->
+                OntDisjointImpl.createDifferentIndividuals(model, individuals.stream()), OntDisjoint.Individuals.class
+        );
     }
 
     @Override
     public OntDisjoint.ObjectProperties createDisjointObjectProperties(Collection<OntObjectProperty> properties) {
+        if (properties.isEmpty()) {
+            throw new IllegalArgumentException("Empty list is specified");
+        }
         checkType(OntDisjoint.ObjectProperties.class);
-        return OntDisjointImpl.createDisjointObjectProperties(this, properties.stream());
+        return checkCreate(model ->
+                OntDisjointImpl.createDisjointObjectProperties(model, properties.stream()), OntDisjoint.ObjectProperties.class
+        );
     }
 
     @Override
     public OntDisjoint.DataProperties createDisjointDataProperties(Collection<OntDataProperty> properties) {
+        if (properties.isEmpty()) {
+            throw new IllegalArgumentException("Empty list is specified");
+        }
         checkType(OntDisjoint.DataProperties.class);
-        return OntDisjointImpl.createDisjointDataProperties(this, properties.stream());
+        return checkCreate(model ->
+                OntDisjointImpl.createDisjointDataProperties(model, properties.stream()), OntDisjoint.DataProperties.class
+        );
     }
 
     @Override

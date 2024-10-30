@@ -20,7 +20,6 @@ package org.apache.jena.ontapi.model;
 
 import org.apache.jena.ontapi.OntJenaException;
 import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFList;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
@@ -40,7 +39,7 @@ import java.util.stream.Stream;
 /**
  * A base abstraction for any Class Expressions (both named and anonymous).
  *
- * @see Named - an OWL Class
+ * @see Named an OWL Class
  * @see <a href="https://www.w3.org/TR/owl2-quick-reference/#Class_Expressions">2.1 Class Expressions</a>
  * @see <a href="https://www.w3.org/TR/owl2-syntax/#Class_Expressions">8 Class Expressions</a>
  */
@@ -89,7 +88,6 @@ public interface OntClass extends OntObject, AsNamed<OntClass.Named>, HasDisjoin
      * @return <b>distinct</b> {@code Stream} of sub {@link OntClass class expression}s
      * @see #subClasses()
      * @see #superClasses(boolean)
-     * @see org.apache.jena.ontology.OntClass#listSubClasses(boolean)
      */
     Stream<OntClass> subClasses(boolean direct);
 
@@ -134,7 +132,6 @@ public interface OntClass extends OntObject, AsNamed<OntClass.Named>, HasDisjoin
      * @return <b>distinct</b> {@code Stream} of super {@link OntClass class expression}s
      * @see #superClasses()
      * @see #subClasses(boolean)
-     * @see org.apache.jena.ontology.OntClass#listSuperClasses(boolean)
      */
     Stream<OntClass> superClasses(boolean direct);
 
@@ -159,15 +156,11 @@ public interface OntClass extends OntObject, AsNamed<OntClass.Named>, HasDisjoin
      * This method may therefore return complete results only in models that have an attached reasoner.
      * For built-in properties the method returns always {@code false}.
      * If there are no domains for the property, then it is considered as global and is attached to root classes.
-     * <p>
-     * The behavior of this method must be identical to the behavior of the Jena method
-     * {@link org.apache.jena.ontology.OntClass#hasDeclaredProperty(Property, boolean)}.
      *
      * @param property {@link OntProperty}, not {@code null}
      * @param direct   {@code boolean}: if {@code true} analyses only the directly adjacent domains in the subclass relation,
      *                 otherwise takes into account the class hierarchy
      * @return {@code boolean}, {@code true} if the property is associated with this class by its domain, otherwise {@code false}
-     * @see org.apache.jena.ontology.OntClass#hasDeclaredProperty(Property, boolean)
      */
     boolean hasDeclaredProperty(OntProperty property, boolean direct);
 
@@ -179,9 +172,6 @@ public interface OntClass extends OntObject, AsNamed<OntClass.Named>, HasDisjoin
      * The properties in the frame-like view of the class are determined by comparing
      * the domain of properties in this class's {@link OntModel} with the class itself.
      * See: <a href="https://jena.apache.org/documentation/notes/rdf-frames.html">Apache Jena: Presenting RDF as frames</a> for more details.
-     * <p>
-     * The behavior of this method must be identical to the behavior of the Jena method
-     * {@link org.apache.jena.ontology.OntClass#listDeclaredProperties(boolean)}}.
      *
      * @param direct {@code boolean}: if {@code true} analyses only the directly adjacent domains in the subclass relation,
      *               otherwise takes into account the class hierarchy
@@ -196,9 +186,6 @@ public interface OntClass extends OntObject, AsNamed<OntClass.Named>, HasDisjoin
      * or (ii) it has no declared superclasses.
      * <p>
      * {@code owl:Nothing} cannot be root.
-     * <p>
-     * The behavior of this method must be identical to the behavior of the Jena method
-     * {@link org.apache.jena.ontology.OntClass#isHierarchyRoot()}.
      *
      * @return {@code true} if this class is the root of the class hierarchy in the model it is attached to
      */
@@ -271,9 +258,9 @@ public interface OntClass extends OntObject, AsNamed<OntClass.Named>, HasDisjoin
     /**
      * Deletes the given {@code HasKey} list including its annotations.
      *
-     * @param list {@link Resource} can be {@link OntList} or {@link RDFList}
+     * @param list {@link Resource} can be {@link OntList} or {@link RDFList};
+     *             if {@code null} the method will remove all hasKey's
      * @return <b>this</b> instance to allow cascading calls
-     * @throws OntJenaException if the list is not found
      */
     OntClass removeHasKey(Resource list);
 
@@ -377,12 +364,16 @@ public interface OntClass extends OntObject, AsNamed<OntClass.Named>, HasDisjoin
      * @return {@link Optional} wrapping {@link OntClass}
      */
     default Optional<OntClass> subClass() {
+        if (!canAsSuperClass()) {
+            return Optional.empty();
+        }
         try (Stream<OntClass> classes = getModel()
                 .statements(null, RDFS.subClassOf, this)
                 .map(OntStatement::getSubject)
                 .filter(it -> it.canAs(OntClass.class))
-                .map(it -> it.as(OntClass.class).asSubClass())
-                .filter(Objects::nonNull)) {
+                .map(it -> it.as(OntClass.class))
+                .filter(OntClass::canAsSubClass)
+                .map(OntClass::asSubClass)) {
             return classes.findFirst();
         }
     }
@@ -409,13 +400,46 @@ public interface OntClass extends OntObject, AsNamed<OntClass.Named>, HasDisjoin
      * @return {@link Optional} wrapping {@link OntClass}
      */
     default Optional<OntClass> superClass() {
+        if (!canAsSubClass()) {
+            return Optional.empty();
+        }
         try (Stream<OntClass> classes = this.statements(RDFS.subClassOf)
                 .map(OntStatement::getSubject)
                 .filter(it -> it.canAs(OntClass.class))
-                .map(it -> it.as(OntClass.class).asSuperClass())
-                .filter(Objects::nonNull)) {
+                .map(it -> it.as(OntClass.class))
+                .filter(OntClass::canAsSuperClass)
+                .map(OntClass::asSuperClass)) {
             return classes.findFirst();
         }
+    }
+
+    /**
+     * Answers {@code true}
+     * if the given class is a subclass of this class.
+     * See {@link #subClasses(boolean)} for a full explanation of the direct parameter.
+     *
+     * @param clazz  a {@link OntClass} to test
+     * @param direct {@code boolean}; If true, only search the classes
+     *               that are directly adjacent to this class in the class hierarchy
+     * @return {@code boolean}
+     */
+    default boolean hasSubClass(OntClass clazz, boolean direct) {
+        return clazz.hasSuperClass(this, direct);
+    }
+
+    /**
+     * Answers {@code true}
+     * if the given class is a superclass of this class.
+     * See {@link #superClasses(boolean)} for a full explanation of the direct parameter
+     *
+     * @param clazz  a {@link OntClass} to test
+     * @param direct {@code boolean}; If true, only search the classes
+     *               that are directly adjacent to this class in the class hierarchy.
+     * @return {@code boolean}
+     */
+    default boolean hasSuperClass(OntClass clazz, boolean direct) {
+        return equals(clazz) ||
+                (canAsSubClass() && clazz.canAsSuperClass() && superClasses(direct).anyMatch(clazz::equals));
     }
 
     /**
@@ -494,7 +518,7 @@ public interface OntClass extends OntObject, AsNamed<OntClass.Named>, HasDisjoin
      * @see #removeSuperClass(Resource)
      */
     default OntClass addSuperClass(OntClass other) {
-        OntJenaException.checkSupported(this.asSubClass() != null && other.asSuperClass() != null);
+        OntJenaException.checkSupported(this.canAsSubClass() && other.canAsSuperClass());
         addSubClassOfStatement(other);
         return this;
     }
@@ -508,7 +532,7 @@ public interface OntClass extends OntObject, AsNamed<OntClass.Named>, HasDisjoin
      * @see #addSuperClass(OntClass)
      */
     default OntClass addSubClass(OntClass other) {
-        OntJenaException.checkSupported(other.asSubClass() != null && this.asSuperClass() != null);
+        OntJenaException.checkSupported(other.canAsSubClass() && this.canAsSuperClass());
         other.addSuperClass(this);
         return this;
     }
@@ -523,7 +547,7 @@ public interface OntClass extends OntObject, AsNamed<OntClass.Named>, HasDisjoin
      * @see #removeDisjointClass(Resource)
      */
     default OntClass addDisjointClass(OntClass other) {
-        OntJenaException.checkSupported(other.asDisjointClass() != null && this.asDisjointClass() != null);
+        OntJenaException.checkSupported(this.canAsDisjointClass() && other.canAsDisjointClass());
         addDisjointWithStatement(other);
         return this;
     }
@@ -537,7 +561,7 @@ public interface OntClass extends OntObject, AsNamed<OntClass.Named>, HasDisjoin
      * @see #removeDisjointClass(Resource)
      */
     default OntClass addEquivalentClass(OntClass other) {
-        OntJenaException.checkSupported(this.asEquivalentClass() != null && other.asEquivalentClass() != null);
+        OntJenaException.checkSupported(this.canAsEquivalentClass() && other.canAsEquivalentClass());
         addEquivalentClassStatement(other);
         return this;
     }
@@ -693,60 +717,139 @@ public interface OntClass extends OntObject, AsNamed<OntClass.Named>, HasDisjoin
     }
 
     /**
-     * Returns this class if the specification allows it to be in subclass position, otherwise returns {@code null}.
+     * Returns the subclass-view of this class
+     * if the specification allows this class to be in subclass position, otherwise throws exception.
      * Some profiles (e.g., OWL2 QL, OWL2 RL)
      * distinguish constructions with respect to their position in the axiom statements.
+     * Note that the returned class may differ in behavior from this class.
      *
-     * @return {@link OntClass} or {@code null}
+     * @return {@link OntClass}, not {@code null}
+     * @throws OntJenaException.Unsupported if this feature is not supported
+     * @see #canAsSubClass()
      */
     default OntClass asSubClass() {
         return this;
     }
 
     /**
-     * Returns this class if the specification allows it to be in superclass position, otherwise returns {@code null}.
+     * Answers if this class can be a subclass of another class.
      * Some profiles (e.g., OWL2 QL, OWL2 RL)
      * distinguish constructions with respect to their position in the axiom statements.
      *
+     * @return {@code true} if this class can be a subclass
+     * @see #asSubClass()
+     */
+    default boolean canAsSubClass() {
+        return true;
+    }
+
+    /**
+     * Returns the superclass-view of this class
+     * if the specification allows this class to be in superclass position, otherwise throws exception.
+     * Some profiles (e.g., OWL2 QL, OWL2 RL)
+     * distinguish constructions with respect to their position in the axiom statements.
+     * Note that the returned class may differ in behavior from this class.
+     *
      * @return {@link OntClass} or {@code null}
+     * @throws OntJenaException.Unsupported if this feature is not supported
+     * @see #canAsSuperClass()
      */
     default OntClass asSuperClass() {
         return this;
     }
 
     /**
-     * Returns this class if the specification allows it to make class assertions, otherwise returns {@code null}.
+     * Answers if this class can be a superclass of another class.
      * Some profiles (e.g., OWL2 QL, OWL2 RL)
      * distinguish constructions with respect to their position in the axiom statements.
      *
+     * @return {@code true} if this class can be a superclass
+     * @see #asSuperClass()
+     */
+    default boolean canAsSuperClass() {
+        return true;
+    }
+
+    /**
+     * Returns the assertion-view of this class
+     * if the specification allows this class to make class assertions, otherwise throws exception.
+     * Some profiles (e.g., OWL2 QL, OWL2 RL)
+     * distinguish constructions with respect to their position in the axiom statements.
+     * Note that the returned class may differ in behavior from this class.
+     *
      * @return {@link OntClass} or {@code null}
+     * @throws OntJenaException.Unsupported if this feature is not supported
+     * @see #canAsAssertionClass()
      */
     default OntClass asAssertionClass() {
         return this;
     }
 
     /**
-     * Returns this class if the specification allows it to be in equivalent
-     * ({@code owl:equivalentClass}) position, otherwise returns {@code null}.
+     * Answers if this class can be an object in class-assertion statement (a type of individual).
      * Some profiles (e.g., OWL2 QL, OWL2 RL)
      * distinguish constructions with respect to their position in the axiom statements.
      *
+     * @return {@code true} if this class can be a class-type of an individual
+     * @see #asAssertionClass()
+     */
+    default boolean canAsAssertionClass() {
+        return true;
+    }
+
+    /**
+     * Returns the equivalent-class-view of this class
+     * if the specification allows this class to be in equivalent
+     * position ({@code owl:equivalentClass}), otherwise throws exception.
+     * Some profiles (e.g., OWL2 QL, OWL2 RL)
+     * distinguish constructions with respect to their position in the axiom statements.
+     * Note that the returned class may differ in behavior from this class.
+     *
      * @return {@link OntClass} or {@code null}
+     * @throws OntJenaException.Unsupported if this feature is not supported
+     * @see #canAsEquivalentClass()
      */
     default OntClass asEquivalentClass() {
         return this;
     }
 
     /**
-     * Returns this class if the specification allows it to be in disjoint
-     * ({@code owl:disjointWith}, {@code owl:AllDisjointClasses}) position, otherwise returns {@code null}.
+     * Answers if this class can be an equivalent of another class.
+     * Some profiles (e.g., OWL2 QL, OWL2 RL)
+     * distinguish constructions with respect to their position in the axiom statements.
+     *
+     * @return {@code true} if this class can be equivalent of another class
+     * @see #asEquivalentClass()
+     */
+    default boolean canAsEquivalentClass() {
+        return true;
+    }
+
+    /**
+     * Returns the disjoint-class-view of this class
+     * if the specification allows this to be in disjoint position
+     * ({@code owl:disjointWith}, {@code owl:AllDisjointClasses}), otherwise throws exception.
      * Some profiles (e.g., OWL2 QL, OWL2 RL)
      * distinguish constructions with respect to their position in the axiom statements.
      *
      * @return {@link OntClass} or {@code null}
+     * @throws OntJenaException.Unsupported if this feature is not supported
+     * @see #canAsDisjointClass()
      */
     default OntClass asDisjointClass() {
         return this;
+    }
+
+    /**
+     * Answers if this class can be disjoint with another class.
+     * Some profiles (e.g., OWL2 QL, OWL2 RL)
+     * distinguish constructions with respect to their position in the axiom statements.
+     *
+     * @return {@code true} if this class can be disjoint with another class
+     * @see #asDisjointClass()
+     */
+    default boolean canAsDisjointClass() {
+        return true;
     }
 
     /*
@@ -896,8 +999,7 @@ public interface OntClass extends OntObject, AsNamed<OntClass.Named>, HasDisjoin
     }
 
     /**
-     * An OWL Class {@link OntEntity Entity}, a named class expression.
-     * This is an analogue of {@link org.apache.jena.ontology.OntClass}, but for OWL2.
+     * An Ontology Class {@link OntEntity Entity}, a named class expression.
      *
      * @see <a href="https://www.w3.org/TR/owl2-syntax/#Classes">5.1 Classes</a>
      */

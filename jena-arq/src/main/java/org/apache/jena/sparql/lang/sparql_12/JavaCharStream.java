@@ -14,6 +14,7 @@ class JavaCharStream
 {
   /** Whether parser is static. */
 
+@SuppressWarnings("all")
 public static final boolean staticFlag = false;
 
   static final int hexval(char c) throws java.io.IOException {
@@ -466,6 +467,7 @@ public JavaCharStream(java.io.Reader dstream,
  * @param dstream the underlying data source.
  */
 
+@SuppressWarnings("all")
 public JavaCharStream(java.io.Reader dstream)
   {
     this(dstream, 1, 1, 4096);

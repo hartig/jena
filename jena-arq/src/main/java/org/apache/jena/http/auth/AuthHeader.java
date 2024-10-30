@@ -188,11 +188,16 @@ public class AuthHeader {
 
     public String getBearerToken() { return bearerToken; }
 
-    /** Is this some unkown scheme? (not basic, digest or bearer). The rest of the line is available from {@link #getUnknown()}. */
+    /** Is this some unknown scheme? (not basic, digest or bearer). The rest of the line is available from {@link #getUnknown()}. */
     public boolean isUnknownAuth() { return AuthScheme.UNKNOWN == authScheme; }
 
     /** The rest of the line for "unknown" */
     public String getUnknown() { return unknown; }
+
+    @Override
+    public String toString() {
+        return "AuthScheme: "+authScheme.toString();
+    }
 
     private static class Builder {
 

@@ -148,9 +148,6 @@ public interface OntProperty extends OntObject {
      * This simulates a frame-like view of properties and classes;
      * for more details see the
      * <a href="https://jena.apache.org/documentation/notes/rdf-frames.html">Apache Jena: Presenting RDF as frames</a>
-     * <p>
-     * The behavior of this method must be identical to the behavior of the Jena method
-     * {@link org.apache.jena.ontology.OntProperty#listDeclaringClasses(boolean)}.
      *
      * @param direct {@code boolean} if {@code true}, use only <em>direct</em> associations between classes and properties
      * @return a {@code Stream} of the classes having this property as one of their declared properties
@@ -187,6 +184,34 @@ public interface OntProperty extends OntObject {
      */
     default Stream<? extends OntProperty> superProperties() {
         return superProperties(false);
+    }
+
+    /**
+     * Answers {@code true}
+     * if the given property is a sub-property of this property.
+     * See {@link #subProperties(boolean)} for a full explanation of the direct parameter.
+     *
+     * @param property a {@link OntProperty} to test
+     * @param direct {@code boolean}; If true, only search the properties
+     *               that are directly adjacent to this property in the class hierarchy
+     * @return {@code boolean}
+     */
+    default boolean hasSubProperty(OntProperty property, boolean direct) {
+        return property.hasSuperProperty(this, direct);
+    }
+
+    /**
+     * Answers {@code true}
+     * if the given property is a super-property of this property.
+     * See {@link #superProperties(boolean)} for a full explanation of the direct parameter.
+     *
+     * @param property a {@link OntProperty} to test
+     * @param direct {@code boolean}; If true, only search the properties
+     *               that are directly adjacent to this property in the class hierarchy
+     * @return {@code boolean}
+     */
+    default boolean hasSuperProperty(OntProperty property, boolean direct) {
+        return equals(property) || superProperties(direct).anyMatch(property::equals);
     }
 
     /**

@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.jena</groupId>
     <artifactId>jena-fuseki</artifactId>
-    <version>5.1.0-SNAPSHOT</version>
+    <version>5.3.0-SNAPSHOT</version>
   </parent> 
 
   <packaging>jar</packaging>
@@ -46,13 +46,13 @@
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-text</artifactId>
-      <version>5.1.0-SNAPSHOT</version>
+      <version>5.3.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-fuseki-access</artifactId>
-      <version>5.1.0-SNAPSHOT</version>
+      <version>5.3.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
@@ -121,6 +121,9 @@
                 <exclude>META-INF/*.SF</exclude>
                 <exclude>META-INF/*.DSA</exclude>
                 <exclude>META-INF/*.RSA</exclude>
+                <exclude>META-INF/DEPENDENCIES</exclude>
+                <exclude>META-INF/MANIFEST.MF</exclude>
+                <exclude>**/module-info.class</exclude>
               </excludes>
             </filter>
           </filters>

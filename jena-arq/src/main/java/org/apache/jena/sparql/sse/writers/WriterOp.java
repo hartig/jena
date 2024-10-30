@@ -110,11 +110,11 @@ public class WriterOp
         op.visit(v);
     }
 
-    public static class OpWriterWorker implements OpVisitor {
+    private static class OpWriterWorker implements OpVisitor {
         private IndentedWriter       out;
         private SerializationContext sContext;
 
-        public OpWriterWorker(IndentedWriter out, SerializationContext sCxt) {
+        private OpWriterWorker(IndentedWriter out, SerializationContext sCxt) {
             this.sContext = sCxt;
             this.out = out;
         }
@@ -553,6 +553,25 @@ public class WriterOp
             out.println();
             printOp(opExtend.getSubOp());
             finish(opExtend);
+        }
+
+        @Override
+        public void visit(OpUnfold opUnfold) {
+            start(opUnfold, NoNL);
+
+            start();
+            WriterExpr.output(out, opUnfold.getExpr(), sContext);
+            out.print(" ");
+            out.print( opUnfold.getVar1().toString() );
+            if ( opUnfold.getVar2() != null ) {
+                out.print(" ");
+                out.print( opUnfold.getVar2().toString() );
+            }
+            finish();
+
+            out.println();
+            printOp(opUnfold.getSubOp());
+            finish(opUnfold);
         }
 
         @Override

@@ -391,7 +391,7 @@ public class OpExecutor {
 
         if ( input instanceof QueryIterRoot ) {
             QueryIterator qIter = exec(opProject.getSubOp(), input);
-            qIter = new QueryIterProject(qIter, opProject.getVars(), execCxt);
+            qIter = QueryIterProject.create(qIter, opProject.getVars(), execCxt);
             return qIter;
         }
         // Nested projected : need to ensure the input is seen.
@@ -447,6 +447,12 @@ public class OpExecutor {
         // the same as extend. The boolean should only be a check.
         QueryIterator qIter = exec(opExtend.getSubOp(), input);
         qIter = new QueryIterAssign(qIter, opExtend.getVarExprList(), execCxt, true);
+        return qIter;
+    }
+
+    protected QueryIterator execute(OpUnfold opUnfold, QueryIterator input) {
+        QueryIterator qIter = exec(opUnfold.getSubOp(), input);
+        qIter = new QueryIterUnfold(qIter, opUnfold.getExpr(), opUnfold.getVar1(), opUnfold.getVar2(), execCxt);
         return qIter;
     }
 

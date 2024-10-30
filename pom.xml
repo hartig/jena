@@ -24,12 +24,12 @@
   <artifactId>jena</artifactId>
   <packaging>pom</packaging>
   <url>https://jena.apache.org/</url>
-  <version>5.1.0-SNAPSHOT</version>
+  <version>5.3.0-SNAPSHOT</version>
 
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>32</version>
+    <version>33</version>
   </parent>
 
   <licenses>
@@ -48,6 +48,7 @@
     <connection>scm:git:https://gitbox.apache.org/repos/asf/jena.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/jena.git</developerConnection>
     <url>https://gitbox.apache.org/repos/asf/jena.git</url>
+    <tag>HEAD</tag>
   </scm>
   
   <properties>
@@ -55,57 +56,57 @@
     <java.version>17</java.version>
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.build.outputTimestamp>2024-03-16T16:17:59Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2024-10-11T18:40:49Z</project.build.outputTimestamp>
 
     <!-- Logging -->
-    <ver.slf4j>2.0.13</ver.slf4j>
-    <ver.log4j2>2.23.1</ver.log4j2>
+    <ver.slf4j>2.0.16</ver.slf4j>
+    <ver.log4j2>2.24.1</ver.log4j2>
 
     <!-- JSON-LD 1.1 -->
-    <ver.titanium-json-ld>1.4.0</ver.titanium-json-ld>
+    <ver.titanium-json-ld>1.4.1</ver.titanium-json-ld>
     <ver.jakarta.json>2.0.1</ver.jakarta.json>
 
     <!-- These two must be in-step -->
-    <ver.jetty>12.0.9</ver.jetty>
-    <ver.jakarta-servlet>6.0.0</ver.jakarta-servlet>
+    <ver.jetty>12.0.14</ver.jetty>
+    <ver.jakarta-servlet>6.1.0</ver.jakarta-servlet>
 
-    <ver.shiro>2.0.0</ver.shiro>
+    <ver.shiro>2.0.1</ver.shiro>
 
-    <ver.protobuf>4.27.0</ver.protobuf>
-    <ver.libthrift>0.20.0</ver.libthrift>
+    <ver.protobuf>4.28.3</ver.protobuf>
+    <ver.libthrift>0.21.0</ver.libthrift>
 
     <ver.caffeine>3.1.8</ver.caffeine>
     <!-- Most of Jena uses other libraries for equivalent functionality. -->
-    <ver.guava>33.2.0-jre</ver.guava>
+    <ver.guava>33.3.1-jre</ver.guava>
 
     <ver.gson>2.11.0</ver.gson>
-    <ver.lucene>9.10.0</ver.lucene>
+    <ver.lucene>9.12.0</ver.lucene>
 
-    <ver.commons-io>2.16.1</ver.commons-io>
+    <ver.commons-io>2.17.0</ver.commons-io>
     <ver.commons-cli>1.7.0</ver.commons-cli>
-    <ver.commons-lang3>3.14.0</ver.commons-lang3>
+    <ver.commons-lang3>3.17.0</ver.commons-lang3>
     <ver.commons-rdf>0.5.0</ver.commons-rdf>
-    <ver.commons-csv>1.11.0</ver.commons-csv>
-    <ver.commons-codec>1.17.0</ver.commons-codec>
-    <ver.commons-compress>1.26.2</ver.commons-compress>
+    <ver.commons-csv>1.12.0</ver.commons-csv>
+    <ver.commons-codec>1.17.1</ver.commons-codec>
+    <ver.commons-compress>1.27.1</ver.commons-compress>
     <ver.commons-collections>4.4</ver.commons-collections>
     <ver.commons-fileupload>2.0.0-M2</ver.commons-fileupload>
 
     <ver.dexxcollection>0.7</ver.dexxcollection>
-    <ver.micrometer>1.13.0</ver.micrometer>
-    <ver.roaringbitmap>1.0.6</ver.roaringbitmap>
+    <ver.micrometer>1.13.6</ver.micrometer>
+    <ver.roaringbitmap>1.3.0</ver.roaringbitmap>
 
     <!-- Testing -->
     <ver.junit4>4.13.2</ver.junit4>
-    <ver.junit5>5.10.2</ver.junit5>
+    <ver.junit5>5.11.3</ver.junit5>
     <ver.junit5-platform>1.10.2</ver.junit5-platform>
  
-    <ver.mockito>5.12.0</ver.mockito>
-    <ver.awaitility>4.2.1</ver.awaitility>
+    <ver.mockito>5.14.2</ver.mockito>
+    <ver.awaitility>4.2.2</ver.awaitility>
     <ver.contract.tests>0.2.0</ver.contract.tests>
 
     <!-- For testing, not shipped -->
-    <ver.graalvm>23.0.4</ver.graalvm>
+    <ver.graalvm>24.1.1</ver.graalvm>
     <ver.org.openjdk.jmh>1.37</ver.org.openjdk.jmh>
 
     <!-- GeoSPARQL related -->
@@ -113,19 +114,26 @@
     <ver.jakarta-xml-bind>4.0.2</ver.jakarta-xml-bind>
     <ver.jcommander>1.82</ver.jcommander>
     <ver.sis>1.4</ver.sis>
-    <ver.jts>1.19.0</ver.jts>
+    <ver.jts>1.20.0</ver.jts>
 
     <!-- Plugins -->
     <ver.plugin.rat>0.16.1</ver.plugin.rat>
     <ver.plugin.assembly>3.7.1</ver.plugin.assembly>
     <ver.plugin.compiler>3.13.0</ver.plugin.compiler>
-    <ver.plugin.surefire>3.2.5</ver.plugin.surefire>
-    <ver.plugin.javadoc>3.6.3</ver.plugin.javadoc>
+    <ver.plugin.surefire>3.5.1</ver.plugin.surefire>
+    <ver.plugin.javadoc>3.10.1</ver.plugin.javadoc>
     <ver.plugin.war>3.4.0</ver.plugin.war>
-    <ver.plugin.shade>3.5.3</ver.plugin.shade>
-    <ver.plugin.enforcer>3.4.1</ver.plugin.enforcer>
-    <ver.plugin.cyclonedx>2.8.0</ver.plugin.cyclonedx>
+    <ver.plugin.shade>3.6.0</ver.plugin.shade>
+    <ver.plugin.enforcer>3.5.0</ver.plugin.enforcer>
+    <ver.plugin.cyclonedx>2.9.0</ver.plugin.cyclonedx>
     <ver.plugin.spdx>0.7.0</ver.plugin.spdx>
+
+    <!--
+         See jena-benchmarks/jena-benchmarks-jmh/pom.xml 
+         Overidden by command line "-Dbenchmark.skip=false"
+    -->
+    <benchmark.skip>true</benchmark.skip>
+
   </properties>
 
   <issueManagement>
@@ -178,8 +186,14 @@
           It builds the modules shipped in apache-jena binaries
           but does not build these binaries.
           This profile does not build javadoc.
+          This profile does not check license headers.
       -->
       <id>dev</id>
+
+      <properties>
+        <rat.skip>true</rat.skip>
+      </properties>
+
       <modules>
         <module>jena-iri</module>
         <module>jena-base</module>
@@ -418,11 +432,22 @@
       <!--
           com.google.errorprone:error_prone_annotations
           is used by gson, guava and caffeine. 
-          It can lead to dependency convergence errors
-          (the dependencies using it are all at the same depth).
+          It can lead to dependency convergence errors.
+
+          The dependencies using it are all at the same depth.
           Either explicitly depend here or choose one
-          route and exclude from the others.
+          route and exclude from the others or exclude
+          systematically. If the dependency plugin is being used,
+	  it will likely report errors because it is stricter than 
+	  the maven resolution rule.
+
           Gson is probably the one to choose as the preferred route.
+          https://github.com/google/gson/issues/2681#issuecomment-2125845040
+          
+          If using runtime checking tools, checkerframework may be needed
+          https://checkerframework.org/manual/#faq-runtime-retention
+
+          The downside of including them is that they bringing in IDE autocomplete names.
       -->
       <!--
       <dependency>
@@ -436,6 +461,14 @@
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
         <version>${ver.gson}</version>
+        <!--
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.errorprone</groupId>
+            <artifactId>error_prone_annotations</artifactId>
+          </exclusion>
+        </exclusions>
+        -->
       </dependency>
 
       <dependency>
@@ -653,14 +686,17 @@
 
       <dependency>
         <groupId>org.graalvm.js</groupId>
-        <artifactId>js</artifactId>
+        <artifactId>js-scriptengine</artifactId>
         <version>${ver.graalvm}</version>
+        <scope>test</scope>
       </dependency>
 
       <dependency>
         <groupId>org.graalvm.js</groupId>
-        <artifactId>js-scriptengine</artifactId>
+        <artifactId>js-community</artifactId>
         <version>${ver.graalvm}</version>
+        <type>pom</type>
+        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -904,24 +940,24 @@
 
       <!-- SBOM : SPDX -->
       <!-- Example : placeholder
-           <plugin>
-           <groupId>org.spdx</groupId>
-           <artifactId>spdx-maven-plugin</artifactId>
-           <version>${ver.plugin.spdx}</version>
-           <configuration>
-           <licenseDeclared>Apache-2.0</licenseDeclared>
-           <copyrightText>See NOTICE file</copyrightText>
-           </configuration>
-           <executions>
-           <execution>
-           <id>build-sbom-spdx</id>
-           <phase>package</phase>
-           <goals>
-           <goal>createSPDX</goal>
-           </goals>
-           </execution>
-           </executions>
-           </plugin>
+      <plugin>
+        <groupId>org.spdx</groupId>
+        <artifactId>spdx-maven-plugin</artifactId>
+        <version>${ver.plugin.spdx}</version>
+        <configuration>
+          <licenseDeclared>Apache-2.0</licenseDeclared>
+          <copyrightText>See NOTICE file</copyrightText>
+        </configuration>
+        <executions>
+          <execution>
+            <id>build-sbom-spdx</id>
+            <phase>package</phase>
+            <goals>
+              <goal>createSPDX</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       -->
 
     </plugins>
@@ -942,6 +978,9 @@
           <version>${ver.plugin.compiler}</version>
           <configuration>
             <release>${java.version}</release>
+            <compilerArgs>
+              <arg>-proc:none</arg>
+            </compilerArgs>
           </configuration>
         </plugin>
 
@@ -1085,90 +1124,6 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-war-plugin</artifactId>
           <version>${ver.plugin.war}</version>
-        </plugin>
-
-        <!--
-            Avoid the warnings and errors from m2e.
-            This plugin's configuration is used to store Eclipse m2e settings only. 
-            It has no influence on the Maven build itself.
-        -->
-        <plugin>
-          <groupId>org.eclipse.m2e</groupId>
-          <artifactId>lifecycle-mapping</artifactId>
-          <version>1.0.0</version>
-          <configuration>
-            <lifecycleMappingMetadata>
-              <pluginExecutions>
-                <pluginExecution>
-                  <!-- 
-                       Warning:
-                       "maven-remote-resources-plugin (goal "process") is ignored by m2e." 
-                  -->
-                  <pluginExecutionFilter>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-enforcer-plugin</artifactId>
-                    <versionRange>[1.0.0,)</versionRange>
-                    <goals>
-                      <goal>enforce</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <ignore />
-                  </action>
-                </pluginExecution>
-                <pluginExecution>
-                  <!-- 
-                       Warning:
-                       "maven-enforcer-plugin (goal "enforce") is ignored by m2e." 
-                  -->
-                  <pluginExecutionFilter>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-remote-resources-plugin</artifactId>
-                    <versionRange>[1.0.0,)</versionRange>
-                    <goals>
-                      <goal>process</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <ignore />
-                  </action>
-                </pluginExecution>
-                
-                <pluginExecution>
-                  <!--
-                      Error:
-                      Plugin execution not covered by lifecycle configuration
-                  -->
-                  <pluginExecutionFilter>
-                    <groupId>org.apache.rat</groupId>
-                    <artifactId>apache-rat-plugin</artifactId>
-                    <versionRange>[0.14,)</versionRange>
-                    <goals>
-                      <goal>check</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <ignore />
-                  </action>
-                </pluginExecution>
-
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>org.xenei</groupId>
-                    <artifactId>contract-test-maven-plugin</artifactId>
-                    <versionRange>[0.1.5,)</versionRange>
-                    <goals>
-                      <goal>contract-test</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <ignore />
-                  </action>
-                </pluginExecution>
-                
-              </pluginExecutions>
-            </lifecycleMappingMetadata>
-          </configuration>
         </plugin>
 
       </plugins>

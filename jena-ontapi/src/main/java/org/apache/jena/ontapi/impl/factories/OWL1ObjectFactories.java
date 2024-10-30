@@ -99,7 +99,7 @@ public class OWL1ObjectFactories {
             NAMED_OBJECT_PROPERTY.apply(config),
             DATATYPE_PROPERTY
     );
-    public static final Function<OntConfig, EnhNodeFactory> ANY_PROPERTY = OntProperties::createFactory;
+    public static final Function<OntConfig, EnhNodeFactory> ANY_PROPERTY = config -> OntProperties.createFactory(config, false);
 
     // Class Expressions (Boolean Connectives and Enumeration of Individuals):
     public static final Function<OntConfig, EnhNodeFactory> UNION_OF_CLASS =
@@ -369,7 +369,7 @@ public class OWL1ObjectFactories {
     );
 
     public static final Function<OntConfig, EnhNodeFactory> DIFFERENT_INDIVIDUALS_DISJOINT =
-            OntDisjoints::createDifferentIndividualsFactory;
+            OntDisjoints::createDLFullDifferentIndividualsFactory;
     public static final Function<OntConfig, EnhNodeFactory> ANY_DISJOINT = DIFFERENT_INDIVIDUALS_DISJOINT;
 
     private static boolean isNamedIndividual(Node n, EnhGraph eg) {

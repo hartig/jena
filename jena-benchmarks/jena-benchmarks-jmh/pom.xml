@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.apache.jena</groupId>
         <artifactId>jena-benchmarks</artifactId>
-        <version>5.1.0-SNAPSHOT</version>
+        <version>5.3.0-SNAPSHOT</version>
     </parent>
 
     <name>Apache Jena - Benchmarks JMH</name>
@@ -47,28 +47,27 @@
         <build.time.xsd>${maven.build.timestamp}</build.time.xsd>
         <automatic.module.name>org.apache.jena.benchmarks.jmh</automatic.module.name>
         <benchmark.skip>true</benchmark.skip>
-        <scope>test</scope>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-base</artifactId>
-            <version>5.1.0-SNAPSHOT</version>
+            <version>5.3.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-core</artifactId>
-            <version>5.1.0-SNAPSHOT</version>
+            <version>5.3.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-arq</artifactId>
-            <version>5.1.0-SNAPSHOT</version>
+            <version>5.3.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
 
@@ -76,14 +75,21 @@
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-arq</artifactId>
             <classifier>tests</classifier>
-            <version>5.1.0-SNAPSHOT</version>
+            <version>5.3.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>jena-benchmarks-shadedJena480</artifactId>
-            <version>5.1.0-SNAPSHOT</version>
+            <version>5.3.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.jena</groupId>
+            <artifactId>jena-benchmarks-shadedJena510</artifactId>
+            <version>5.3.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
 
@@ -118,6 +124,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <release>${java.version}</release>
+                    <compilerArgs>
+                      <arg>-proc:full</arg>
+                    </compilerArgs>
+                </configuration>
             </plugin>
 
             <plugin>

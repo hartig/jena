@@ -18,57 +18,8 @@
 
 package org.apache.jena.tdb1.assembler;
 
-import org.apache.jena.rdf.model.Property ;
-import org.apache.jena.rdf.model.Resource ;
-import org.apache.jena.sparql.core.assembler.AssemblerUtils ;
-import org.apache.jena.system.Vocab;
-import org.apache.jena.tdb1.TDB1;
+/** @deprecated Use {@link VocabTDB1} */
+@Deprecated(forRemoval = true)
+public class VocabTDB extends VocabTDB1 {
 
-public class VocabTDB
-{
-    private static final String NS = TDB1.namespace ;
-
-    public static String getURI() { return NS ; }
-
-    // Types
-    public static final Resource tDatasetTDB        = Vocab.type(NS, "DatasetTDB") ;
-    public static final Resource tGraphTDB          = Vocab.type(NS, "GraphTDB") ;
-//    public static final Resource tGraphBDB          = Vocab.type(NS, "GraphBDB") ;
-//    public static final Resource tTupleIndex        = Vocab.type(NS, "TupleIndex") ;
-    public static final Resource tNodeTable         = Vocab.type(NS, "NodeTable") ;
-
-    public static final Property pLocation          = Vocab.property(NS, "location") ;
-    public static final Property pUnionDefaultGraph = Vocab.property(NS, "unionDefaultGraph") ;
-
-    public static final Property pIndex             = Vocab.property(NS, "index") ;
-    public static final Property pGraphName1        = Vocab.property(NS, "graphName") ;
-    public static final Property pGraphName2        = Vocab.property(NS, "namedGraph") ;
-    public static final Property pDataset           = Vocab.property(NS, "dataset") ;
-
-    public static final Property pNodes             = Vocab.property(NS, "nodes") ;
-
-    // Indexes
-    public static final Property pDescription       = Vocab.property(getURI(), "description") ;
-    public static final Property pFile              = Vocab.property(getURI(), "file") ;
-
-    // Nodes
-    public static final Property pNodeIndex         = Vocab.property(getURI(), "nodeIndex") ;
-    public static final Property pNodeData          = Vocab.property(getURI(), "nodeData") ;
-
-    // Setting
-    public static final Property pSetting           = Vocab.property(getURI(), "setting") ;
-    public static final Property pName              = Vocab.property(getURI(), "name") ;
-    public static final Property pValue             = Vocab.property(getURI(), "value") ;
-
-    private static boolean initialized = false ;
-
-    static { init() ; }
-
-    static synchronized public void init() {
-        if ( initialized )
-            return;
-        initialized = true;
-        AssemblerUtils.registerDataset(tDatasetTDB, new DatasetAssemblerTDB1());
-        AssemblerUtils.registerModel(tGraphTDB, new TDB1GraphAssembler());
-    }
 }

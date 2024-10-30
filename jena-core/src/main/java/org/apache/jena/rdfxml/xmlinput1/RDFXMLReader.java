@@ -146,11 +146,11 @@ public class RDFXMLReader implements RDFReaderI, ARPErrorNumbers {
             return NodeFactory.createLiteralLang(lit.toString(), lit.getLang());
 
         if (lit.isWellFormedXML()) {
-            return NodeFactory.createLiteral(lit.toString(), null, XMLLiteralType.theXMLLiteralType);
+            return NodeFactory.createLiteral(lit.toString(), null, XMLLiteralType.rdfXMLLiteral);
         }
 
         RDFDatatype dt = TypeMapper.getInstance().getSafeTypeByName(dtURI);
-        return NodeFactory.createLiteral(lit.toString(), dt);
+        return NodeFactory.createLiteralDT(lit.toString(), dt);
 
     }
 

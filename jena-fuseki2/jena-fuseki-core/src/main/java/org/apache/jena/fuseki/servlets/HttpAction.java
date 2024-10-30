@@ -35,7 +35,6 @@ import java.util.zip.GZIPInputStream;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import org.apache.jena.atlas.io.IO;
 import org.apache.jena.atlas.lib.NotImplemented;
 import org.apache.jena.atlas.logging.FmtLog;
@@ -44,6 +43,7 @@ import org.apache.jena.fuseki.Fuseki;
 import org.apache.jena.fuseki.FusekiException;
 import org.apache.jena.fuseki.server.*;
 import org.apache.jena.fuseki.system.ActionCategory;
+import org.apache.jena.query.ReadWrite;
 import org.apache.jena.query.TxnType;
 import org.apache.jena.riot.WebContent;
 import org.apache.jena.riot.web.HttpNames;
@@ -309,8 +309,6 @@ public class HttpAction
      * Prefer one of {@link #beginRead()} or {@link #beginWrite()} if the action is
      * known to be a a read or write at the start or call {@link #begin()}
      * if the transaction may promote.
-     *
-     *
      */
     public void begin(TxnType txnType) {
         enterActionTxn();
@@ -331,23 +329,31 @@ public class HttpAction
         finishActionTxn();
         if ( dataService != null )
             dataService.finishTxn();
-        if ( transactional.isInTransaction() ) {
-            switch(transactional.transactionMode() ) {
-                case READ -> {}
-                case WRITE -> {
-                    // Write transactions must have explicitly called commit or abort.
-                    FmtLog.warn(log, "[%d] Transaction still active - no commit or abort seen (forced abort)", this.id);
-                    try {
-                        transactional.abort();
-                    } catch (RuntimeException ex) {
-                        FmtLog.warn(log, "[%d] Exception in forced abort (trying to continue)", this.id, ex);
-                    }
+        if ( transactional != null && transactional.isInTransaction() )
+            forceAbort();
+        leaveActionTxn();
+    }
+
+    /** Force an abort - i.e. abort with protection against anything going wrong. */
+    private void forceAbort() {
+        ReadWrite rwMode = transactional.transactionMode();
+        if ( rwMode == null )
+            // Damaged system.
+            return;
+        switch(rwMode) {
+            case READ -> {}
+            case WRITE -> {
+                // Write transactions must have explicitly called commit or abort.
+                FmtLog.warn(log, "[%d] Transaction still active - no commit or abort seen (forced abort)", this.id);
+                try {
+                    transactional.abort();
+                } catch (RuntimeException ex) {
+                    FmtLog.warn(log, "[%d] Exception in forced abort (trying to continue)", this.id, ex);
                 }
             }
-            try { transactional.end(); }
-            catch (RuntimeException ex) {}
         }
-        leaveActionTxn();
+        try { transactional.end(); }
+        catch (RuntimeException ex) {}
     }
 
     /**
@@ -475,23 +481,27 @@ public class HttpAction
     // ----
 
     public void commit() {
-        dataService.finishTxn();
-        transactional.commit();
+        if ( transactional != null )
+            transactional.commit();
         end();
     }
 
     /** Abort: ignore exceptions (for clearup code) */
     public void abortSilent() {
-        try { transactional.abort(); }
-        catch (Exception ex) {}
-        finally {
+        try {
+            if ( transactional != null )
+                transactional.abort();
+        } catch (Exception ex) {
+        } finally {
             try { end(); } catch (Exception ex) {}
         }
     }
 
     public void abort() {
-        try { transactional.abort(); }
-        catch (Exception ex) {
+        try {
+            if ( transactional != null )
+                transactional.abort();
+        } catch (Exception ex) {
             // Some datasets claim to be transactional but
             // don't provide a real abort. We tried to avoid
             // them earlier but even if they sneak through,

@@ -20,7 +20,6 @@ package org.apache.jena.ontapi.impl.factories;
 
 import org.apache.jena.enhanced.EnhGraph;
 import org.apache.jena.enhanced.EnhNode;
-import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.ontapi.OntModelControls;
@@ -32,7 +31,10 @@ import org.apache.jena.ontapi.common.OntConfig;
 import org.apache.jena.ontapi.common.OntEnhGraph;
 import org.apache.jena.ontapi.common.OntEnhNodeFactories;
 import org.apache.jena.ontapi.impl.objects.OntDisjointImpl;
+import org.apache.jena.ontapi.model.OntClass;
+import org.apache.jena.ontapi.model.OntDataProperty;
 import org.apache.jena.ontapi.model.OntIndividual;
+import org.apache.jena.ontapi.model.OntObjectProperty;
 import org.apache.jena.ontapi.utils.Iterators;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFList;
@@ -42,13 +44,14 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL2;
 
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 final class OntDisjoints {
     public static final EnhNodeFinder PROPERTIES_FINDER = new EnhNodeFinder.ByType(OWL2.AllDisjointProperties);
     public static final EnhNodeFinder DISJOINT_FINDER = OntEnhNodeFactories.createFinder(OWL2.AllDisjointClasses,
             OWL2.AllDifferent, OWL2.AllDisjointProperties);
 
-    public static EnhNodeFactory createDifferentIndividualsFactory(OntConfig config) {
+    public static EnhNodeFactory createDLFullDifferentIndividualsFactory(OntConfig config) {
         boolean useDistinctMembers = config.getBoolean(OntModelControls.USE_OWL1_DISTINCT_MEMBERS_PREDICATE_FEATURE);
         boolean compatible = config.getBoolean(OntModelControls.USE_OWL2_DEPRECATED_VOCABULARY_FEATURE);
         Property[] predicates;
@@ -64,65 +67,114 @@ final class OntDisjoints {
                 (n, g) -> new OntDisjointImpl.IndividualsImpl(n, g, !compatible, useDistinctMembers),
                 OWL2.AllDifferent,
                 OntIndividual.class,
-                true,
+                it -> true,
+                1,
                 predicates
         );
     }
 
-    public static EnhNodeFactory createFactory(
+    public static EnhNodeFactory createELQLRLDifferentIndividualsFactory() {
+        return createFactory(
+                OntDisjointImpl.IndividualsImpl.class,
+                (n, g) -> new OntDisjointImpl.IndividualsImpl(n, g, true, false),
+                OWL2.AllDifferent,
+                OntIndividual.class,
+                it -> true,
+                2,
+                OWL2.members
+        );
+    }
+
+    public static EnhNodeFactory createDisjointObjectPropertiesFactory(int atLeastN) {
+        return createFactory(
+                OntDisjointImpl.ObjectPropertiesImpl.class,
+                OntDisjointImpl.ObjectPropertiesImpl::new,
+                OWL2.AllDisjointProperties,
+                OntObjectProperty.class,
+                it -> true,
+                atLeastN,
+                OWL2.members
+        );
+    }
+
+    public static EnhNodeFactory createDisjointDataPropertiesFactory(int atLeastN) {
+        return createFactory(
+                OntDisjointImpl.DataPropertiesImpl.class,
+                OntDisjointImpl.DataPropertiesImpl::new,
+                OWL2.AllDisjointProperties,
+                OntDataProperty.class,
+                it -> true,
+                atLeastN,
+                OWL2.members
+        );
+    }
+
+    public static EnhNodeFactory createDisjointClassesFactory(int atLeastN) {
+        return createFactory(
+                OntDisjointImpl.QLRLClassesImpl.class,
+                OntDisjointImpl.QLRLClassesImpl::new,
+                OWL2.AllDisjointClasses,
+                OntClass.class,
+                it -> true,
+                atLeastN,
+                OWL2.members
+        );
+    }
+
+    public static EnhNodeFactory createQLRLDisjointClassesFactory() {
+        return createFactory(
+                OntDisjointImpl.QLRLClassesImpl.class,
+                OntDisjointImpl.QLRLClassesImpl::new,
+                OWL2.AllDisjointClasses,
+                OntClass.class,
+                OntClass::canAsDisjointClass,
+                2,
+                OWL2.members
+        );
+    }
+
+    private static <X extends RDFNode> EnhNodeFactory createFactory(
             Class<? extends OntDisjointImpl<?>> impl,
             BiFunction<Node, EnhGraph, EnhNode> producer,
-            Resource type,
-            Class<? extends RDFNode> view,
-            boolean allowEmptyList,
-            Property... predicates) {
-        EnhNodeProducer maker = new EnhNodeProducer.WithType(impl, type, producer);
-        EnhNodeFinder finder = new EnhNodeFinder.ByType(type);
-        EnhNodeFilter filter = EnhNodeFilter.ANON.and(new EnhNodeFilter.HasType(type));
-        return OntEnhNodeFactories.createCommon(maker, finder, filter
-                .and(getHasPredicatesFilter(predicates))
-                .and(getHasMembersOfFilter(view, allowEmptyList, predicates)));
-    }
-
-    private static EnhNodeFilter getHasPredicatesFilter(Property... predicates) {
-        if (predicates.length == 0) {
-            throw new IllegalArgumentException();
-        }
-        EnhNodeFilter res = new EnhNodeFilter.HasPredicate(predicates[0]);
-        for (int i = 1; i < predicates.length; i++) {
-            res = res.or(new EnhNodeFilter.HasPredicate(predicates[i]));
-        }
-        return res;
-    }
-
-    private static EnhNodeFilter getHasMembersOfFilter(Class<? extends RDFNode> view,
-                                                       boolean allowEmptyList,
-                                                       Property... predicates) {
-        return (node, eg) -> {
-            ExtendedIterator<Node> res = listRoots(node, eg.asGraph(), predicates);
+            Resource rdfType,
+            Class<X> memberType,
+            Predicate<X> testMember,
+            int atLeastN,
+            Property... membersPredicates
+    ) {
+        EnhNodeProducer maker = new EnhNodeProducer.WithType(impl, rdfType, producer);
+        EnhNodeFinder finder = new EnhNodeFinder.ByType(rdfType);
+        EnhNodeFilter filter = EnhNodeFilter.ANON.and(new EnhNodeFilter.HasType(rdfType)).and((n, g) -> {
+            ExtendedIterator<Triple> res;
+            if (membersPredicates.length == 1) {
+                res = g.asGraph().find(n, membersPredicates[0].asNode(), Node.ANY);
+            } else {
+                res = Iterators.flatMap(Iterators.of(membersPredicates), it -> g.asGraph().find(n, it.asNode(), Node.ANY));
+            }
             try {
                 while (res.hasNext()) {
-                    if (testList(res.next(), eg, view, allowEmptyList)) return true;
+                    Node listNode = res.next().getObject();
+                    if (!STDObjectFactories.RDF_LIST.canWrap(listNode, g)) {
+                        return false;
+                    }
+                    if (atLeastN == 0) {
+                        return true;
+                    }
+                    RDFList list = (RDFList) STDObjectFactories.RDF_LIST.wrap(listNode, g);
+                    if (Iterators.hasAtLeast(
+                            list.iterator()
+                                    .mapWith(it ->
+                                            OntEnhGraph.asPersonalityModel(g).findNodeAs(it.asNode(), memberType)
+                                    )
+                                    .filterKeep(it -> it != null && testMember.test(it)), atLeastN)) {
+                        return true;
+                    }
                 }
             } finally {
                 res.close();
             }
             return false;
-        };
-    }
-
-    private static ExtendedIterator<Node> listRoots(Node node, Graph graph, Property... predicates) {
-        return Iterators.flatMap(Iterators.of(predicates),
-                p -> graph.find(node, p.asNode(), Node.ANY).mapWith(Triple::getObject));
-    }
-
-    private static boolean testList(Node node, EnhGraph graph, Class<? extends RDFNode> view, boolean allowEmptyList) {
-        if (!STDObjectFactories.RDF_LIST.canWrap(node, graph)) {
-            return false;
-        }
-        if (view == null) return true;
-        RDFList list = (RDFList) STDObjectFactories.RDF_LIST.wrap(node, graph);
-        return (list.isEmpty() && allowEmptyList) ||
-                Iterators.anyMatch(list.iterator().mapWith(RDFNode::asNode), n -> OntEnhGraph.canAs(view, n, graph));
+        });
+        return OntEnhNodeFactories.createCommon(maker, finder, filter);
     }
 }

@@ -68,6 +68,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -174,8 +175,8 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
     }
 
     public static OntIndividual.Anonymous createAnonymousIndividual(OntGraphModelImpl model, OntClass source) {
-        OntGraphModelImpl.checkFeature(model, OntModelControls.ALLOW_ANONYMOUS_INDIVIDUALS, "anonymous-individuals");
-        OntJenaException.checkSupported(source.asAssertionClass() != null,
+        model.checkType(OntIndividual.Anonymous.class);
+        OntJenaException.checkSupported(source.canAsAssertionClass(),
                 "Class " + OntEnhNodeFactories.viewAsString(source.getClass()) + " cannot have individuals. " +
                         "Profile: " + model.getOntPersonality().getName());
         return model.getNodeAs(model.createResource(source).asNode(), OntIndividual.Anonymous.class);
@@ -183,7 +184,7 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
 
     public static OntIndividual.Named createNamedIndividual(OntGraphModelImpl model, OntClass source, String uri) {
         OntJenaException.notNull(uri, "Null uri");
-        OntJenaException.checkSupported(source.asAssertionClass() != null,
+        OntJenaException.checkSupported(source.canAsAssertionClass(),
                 "Class " + OntEnhNodeFactories.viewAsString(source.getClass()) + " cannot have individuals. " +
                         "Profile: " + model.getOntPersonality().getName());
         Resource res = model.createResource(uri, source);
@@ -197,12 +198,18 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
                                                               OntClass clazz,
                                                               Stream<? extends OntRelationalProperty> collection) {
         OntGraphModelImpl.checkFeature(m, OntModelControls.USE_OWL2_CLASS_HAS_KEY_FEATURE, "owl:hasKey");
+        OntJenaException.checkSupported(clazz.canAsSubClass(),
+                "Class " + OntEnhNodeFactories.viewAsString(clazz.getClass()) + " cannot have keys. " +
+                        "Profile: " + m.getOntPersonality().getName());
         return m.createOntList(clazz, OWL2.hasKey, OntRelationalProperty.class,
                 collection.distinct().map(OntRelationalProperty.class::cast).iterator());
     }
 
     public static Stream<OntList<OntRelationalProperty>> listHasKeys(OntGraphModelImpl m, OntClass clazz) {
         if (!OntGraphModelImpl.configValue(m, OntModelControls.USE_OWL2_CLASS_HAS_KEY_FEATURE)) {
+            return Stream.empty();
+        }
+        if (!clazz.canAsSubClass()) {
             return Stream.empty();
         }
         return OntListImpl.stream(m, clazz, OWL2.hasKey, OntRelationalProperty.class);
@@ -212,14 +219,19 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
                                     OntClass clazz,
                                     RDFNode rdfList) throws OntJenaException.IllegalArgument {
         OntGraphModelImpl.checkFeature(m, OntModelControls.USE_OWL2_CLASS_HAS_KEY_FEATURE, "owl:hasKey");
-        m.deleteOntList(clazz, OWL2.hasKey, clazz.findHasKey(rdfList).orElse(null));
+        if (rdfList == null) {
+            clazz.hasKeys().toList().forEach(it -> m.deleteOntList(clazz, OWL2.hasKey, it));
+        } else {
+            m.deleteOntList(clazz, OWL2.hasKey, clazz.findHasKey(rdfList)
+                    .orElseThrow(() -> new OntJenaException.IllegalArgument("can't find list " + rdfList)));
+        }
     }
 
     public static Stream<OntClass> disjointClasses(OntGraphModelImpl m, OntClass clazz) {
         if (!OntGraphModelImpl.configValue(m, OntModelControls.USE_OWL_CLASS_DISJOINT_WITH_FEATURE)) {
             return Stream.empty();
         }
-        if (clazz.asDisjointClass() == null) {
+        if (!clazz.canAsDisjointClass()) {
             return Stream.empty();
         }
         return Stream.of(
@@ -231,14 +243,14 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
                 )
                 .flatMap(it -> it)
                 .filter(it -> !it.equals(clazz))
+                .filter(OntClass::canAsDisjointClass)
                 .map(OntClass::asDisjointClass)
-                .filter(Objects::nonNull)
                 .distinct();
     }
 
     public static void addDisjoint(OntGraphModelImpl m, OntClass clazz, OntClass other) {
         OntGraphModelImpl.checkFeature(m, OntModelControls.USE_OWL_CLASS_DISJOINT_WITH_FEATURE, "owl:disjointWith");
-        OntJenaException.checkSupported(clazz.asDisjointClass() != null && other.asDisjointClass() != null,
+        OntJenaException.checkSupported(clazz.canAsDisjointClass() && other.canAsDisjointClass(),
                 "Classes " + OntEnhNodeFactories.viewAsString(clazz.getClass()) + " and " + OntEnhNodeFactories.viewAsString(other.getClass()) +
                         " cannot be disjoint. Profile " + m.getOntPersonality().getName()
         );
@@ -252,7 +264,7 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
 
     public static OntStatement addDisjointWithStatement(OntGraphModelImpl m, OntClass clazz, OntClass other) {
         OntGraphModelImpl.checkFeature(m, OntModelControls.USE_OWL_CLASS_DISJOINT_WITH_FEATURE, "owl:disjointWith");
-        OntJenaException.checkSupported(clazz.asDisjointClass() != null && other.asDisjointClass() != null,
+        OntJenaException.checkSupported(clazz.canAsDisjointClass() && other.canAsDisjointClass(),
                 "Classes " + OntEnhNodeFactories.viewAsString(clazz.getClass()) + " and " + OntEnhNodeFactories.viewAsString(other.getClass()) +
                         " cannot be disjoint. Profile " + m.getOntPersonality().getName()
         );
@@ -263,7 +275,7 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
         if (!OntGraphModelImpl.configValue(m, OntModelControls.USE_OWL_CLASS_EQUIVALENT_FEATURE)) {
             return Stream.empty();
         }
-        if (clazz.asEquivalentClass() == null) {
+        if (!clazz.canAsEquivalentClass()) {
             return Stream.empty();
         }
         return Stream.of(clazz.objects(OWL2.equivalentClass, OntClass.class),
@@ -273,14 +285,14 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
                 )
                 .flatMap(it -> it)
                 .filter(it -> !it.equals(clazz))
+                .filter(OntClass::canAsEquivalentClass)
                 .map(OntClass::asEquivalentClass)
-                .filter(Objects::nonNull)
                 .distinct();
     }
 
     public static OntStatement addEquivalentClass(OntGraphModelImpl m, OntClass clazz, OntClass other) {
         OntGraphModelImpl.checkFeature(m, OntModelControls.USE_OWL_CLASS_EQUIVALENT_FEATURE, "owl:equivalentClass");
-        OntJenaException.checkSupported(clazz.asEquivalentClass() != null && other.asEquivalentClass() != null,
+        OntJenaException.checkSupported(clazz.canAsEquivalentClass() && other.canAsEquivalentClass(),
                 "Classes " + OntEnhNodeFactories.viewAsString(clazz.getClass()) + " and " + OntEnhNodeFactories.viewAsString(other.getClass()) +
                         " cannot be equivalent. Profile " + m.getOntPersonality().getName()
         );
@@ -404,7 +416,13 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
         if (!candidate.canAs(OntClass.class)) {
             return false;
         }
+        if (!clazz.canAsDisjointClass()) {
+            return false;
+        }
         OntClass other = candidate.as(OntClass.class);
+        if (!other.canAsDisjointClass()) {
+            return false;
+        }
         try (Stream<OntClass> disjoints = other.disjointClasses()) {
             if (disjoints.anyMatch(clazz::equals)) {
                 return true;
@@ -424,7 +442,7 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
     }
 
     static Stream<OntIndividual> individuals(OntClass clazz, boolean direct) {
-        if (clazz.asAssertionClass() == null) {
+        if (!clazz.canAsAssertionClass()) {
             return Stream.empty();
         }
         if (OntGraphModelImpl.configValue(clazz.getModel(), OntModelControls.USE_BUILTIN_HIERARCHY_SUPPORT)) {
@@ -435,6 +453,9 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
     }
 
     public static Stream<OntClass> subClasses(OntClass clazz, boolean direct) {
+        if (!clazz.canAsSuperClass()) {
+            return Stream.empty();
+        }
         if (direct) {
             Property reasonerProperty = reasonerProperty(clazz.getModel(), RDFS.subClassOf);
             if (reasonerProperty != null) {
@@ -450,6 +471,9 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
     }
 
     public static Stream<OntClass> superClasses(OntClass clazz, boolean direct) {
+        if (!clazz.canAsSubClass()) {
+            return Stream.empty();
+        }
         if (direct) {
             Property reasonerProperty = reasonerProperty(clazz.getModel(), RDFS.subClassOf);
             if (reasonerProperty != null) {
@@ -464,8 +488,31 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
         );
     }
 
+    public static boolean hasSuperClass(OntClass clazz, OntClass candidateSuper, boolean direct) {
+        if (clazz.equals(candidateSuper)) {
+            // every class is a subclass of itself
+            return true;
+        }
+        if (!clazz.canAsSubClass() || !candidateSuper.canAsSuperClass()) {
+            return false;
+        }
+        if (direct) {
+            Property reasonerProperty = reasonerProperty(clazz.getModel(), RDFS.subClassOf);
+            if (reasonerProperty != null) {
+                return clazz.getModel().contains(clazz, reasonerProperty, candidateSuper);
+            }
+        }
+        return HierarchySupport.contains(
+                clazz,
+                candidateSuper,
+                it -> explicitSuperClasses(RDFS.subClassOf, it),
+                direct,
+                OntGraphModelImpl.configValue(clazz.getModel(), OntModelControls.USE_BUILTIN_HIERARCHY_SUPPORT)
+        );
+    }
+
     static Stream<OntClass> explicitSuperClasses(Property predicate, OntObject clazz) {
-        return clazz.objects(predicate, OntClass.class).map(OntClass::asSuperClass).filter(Objects::nonNull);
+        return clazz.objects(predicate, OntClass.class).filter(OntClass::canAsSuperClass).map(OntClass::asSuperClass);
     }
 
     static Stream<OntClass> explicitSubClasses(OntClass clazz) {
@@ -473,7 +520,7 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
     }
 
     static Stream<OntClass> explicitSubClasses(Property predicate, OntClass clazz) {
-        return subjects(predicate, clazz, OntClass.class).map(OntClass::asSubClass).filter(Objects::nonNull);
+        return subjects(predicate, clazz, OntClass.class).filter(OntClass::canAsSubClass).map(OntClass::asSubClass);
     }
 
     @Override
@@ -546,6 +593,11 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
     @Override
     public Stream<OntClass> equivalentClasses() {
         return equivalentClasses(getModel(), this);
+    }
+
+    @Override
+    public boolean hasSuperClass(OntClass clazz, boolean direct) {
+        return OntClassImpl.hasSuperClass(this, clazz, direct);
     }
 
     @Override
@@ -648,27 +700,64 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
 
         @Override
         public OntClass asSubClass() {
-            return OWL2.Thing.equals(getValue()) ? this : null;
+            if (OWL2.Thing.equals(getValue())) {
+                return this;
+            }
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a subclass");
+        }
+
+        @Override
+        public boolean canAsSubClass() {
+            return OWL2.Thing.equals(getValue());
         }
 
         @Override
         public OntClass asSuperClass() {
-            return getValue().isURIResource() ? this : null;
+            if (getValue().isURIResource()) {
+                return this;
+            }
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a superclass");
+        }
+
+        @Override
+        public boolean canAsSuperClass() {
+            return getValue().isURIResource();
         }
 
         @Override
         public OntClass asEquivalentClass() {
-            return asSubClass();
+            if (OWL2.Thing.equals(getValue())) {
+                return this;
+            }
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be an equivalent class");
+        }
+
+        @Override
+        public boolean canAsEquivalentClass() {
+            return OWL2.Thing.equals(getValue());
         }
 
         @Override
         public OntClass asDisjointClass() {
-            return asSubClass();
+            if (OWL2.Thing.equals(getValue())) {
+                return this;
+            }
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a disjoint class");
+        }
+
+        @Override
+        public boolean canAsDisjointClass() {
+            return OWL2.Thing.equals(getValue());
         }
 
         @Override
         public OntClass asAssertionClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a object position of class assertion");
+        }
+
+        @Override
+        public boolean canAsAssertionClass() {
+            return false;
         }
     }
 
@@ -679,7 +768,32 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
 
         @Override
         public OntClass asSuperClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a superclass");
+        }
+
+        @Override
+        public boolean canAsSuperClass() {
+            return false;
+        }
+
+        @Override
+        public OntClass asAssertionClass() {
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a type of individual");
+        }
+
+        @Override
+        public boolean canAsAssertionClass() {
+            return false;
+        }
+
+        @Override
+        public OntClass asEquivalentClass() {
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be an equivalent");
+        }
+
+        @Override
+        public boolean canAsEquivalentClass() {
+            return false;
         }
     }
 
@@ -702,7 +816,12 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
 
         @Override
         public OntClass asAssertionClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a object position of class assertion");
+        }
+
+        @Override
+        public boolean canAsAssertionClass() {
+            return false;
         }
     }
 
@@ -714,12 +833,32 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
 
         @Override
         public OntClass asSuperClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a superclass");
+        }
+
+        @Override
+        public boolean canAsSuperClass() {
+            return false;
+        }
+
+        @Override
+        public OntClass asAssertionClass() {
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a type of individual");
+        }
+
+        @Override
+        public boolean canAsAssertionClass() {
+            return false;
         }
 
         @Override
         public OntClass asEquivalentClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be an equivalent class");
+        }
+
+        @Override
+        public boolean canAsEquivalentClass() {
+            return false;
         }
 
     }
@@ -744,17 +883,32 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
 
         @Override
         public OntClass asSubClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a subclass");
+        }
+
+        @Override
+        public boolean canAsSubClass() {
+            return false;
         }
 
         @Override
         public OntClass asEquivalentClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be an equivalent class");
+        }
+
+        @Override
+        public boolean canAsEquivalentClass() {
+            return false;
         }
 
         @Override
         public OntClass asDisjointClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a disjoint class");
+        }
+
+        @Override
+        public boolean canAsDisjointClass() {
+            return false;
         }
     }
 
@@ -778,17 +932,32 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
 
         @Override
         public OntClass asSubClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a subclass");
+        }
+
+        @Override
+        public boolean canAsSubClass() {
+            return false;
         }
 
         @Override
         public OntClass asEquivalentClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be an equivalent class");
+        }
+
+        @Override
+        public boolean canAsEquivalentClass() {
+            return false;
         }
 
         @Override
         public OntClass asDisjointClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a disjoint class");
+        }
+
+        @Override
+        public boolean canAsDisjointClass() {
+            return false;
         }
     }
 
@@ -835,22 +1004,27 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
 
         @Override
         public OntClass asSuperClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a superclass");
+        }
+
+        @Override
+        public boolean canAsSuperClass() {
+            return false;
         }
 
         @Override
         public OntClass asEquivalentClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be an equivalent class");
         }
 
         @Override
-        public OntClass asDisjointClass() {
-            return asSubClass();
+        public boolean canAsEquivalentClass() {
+            return false;
         }
 
         @Override
         public Stream<OntClass> components() {
-            return getList().members().map(OntClass::asSubClass).filter(Objects::nonNull);
+            return getList().members().filter(OntClass::canAsSubClass);
         }
     }
 
@@ -872,27 +1046,47 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
 
         @Override
         public OntClass asSubClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a subclass");
+        }
+
+        @Override
+        public boolean canAsSubClass() {
+            return false;
         }
 
         @Override
         public OntClass asAssertionClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a object position of class assertion");
+        }
+
+        @Override
+        public boolean canAsAssertionClass() {
+            return false;
         }
 
         @Override
         public OntClass asEquivalentClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be an equivalent class");
+        }
+
+        @Override
+        public boolean canAsEquivalentClass() {
+            return false;
         }
 
         @Override
         public OntClass asDisjointClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a disjoint class");
+        }
+
+        @Override
+        public boolean canAsDisjointClass() {
+            return false;
         }
 
         @Override
         public Stream<OntClass> components() {
-            return getList().members().map(OntClass::asSuperClass).filter(Objects::nonNull);
+            return getList().members().filter(OntClass::canAsSuperClass).map(OntClass::asSuperClass);
         }
     }
 
@@ -906,30 +1100,31 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
 
         @Override
         public OntClass asSubClass() {
-            Collection<OntClass> res = collectSubClasses();
-            return res.isEmpty() ? null : new RLIntersectionOfImpl(this.node, this.enhGraph) {
-                @Override
-                public Stream<OntClass> components() {
-                    return res.stream();
-                }
-            };
+            return asSubClass(() -> "Specification does not allow this class to be a subclass");
+        }
+
+        @Override
+        public boolean canAsSubClass() {
+            return hasMemberSubClasses();
         }
 
         @Override
         public OntClass asSuperClass() {
-            Collection<OntClass> res = collectSuperClasses();
-            return res.isEmpty() ? null : new RLIntersectionOfImpl(this.node, this.enhGraph) {
-                @Override
-                public Stream<OntClass> components() {
-                    return res.stream();
-                }
-            };
+            return asSuperClass(() -> "Specification does not allow this class to be a superclass");
+        }
+
+        @Override
+        public boolean canAsSuperClass() {
+            return hasMemberSuperClasses();
         }
 
         @Override
         public OntClass asEquivalentClass() {
             Collection<OntClass> res = collectEquivalentClasses();
-            return res.isEmpty() ? null : new RLIntersectionOfImpl(this.node, this.enhGraph) {
+            if (res.isEmpty()) {
+                throw new OntJenaException.Unsupported("Specification does not allow this class to be an equivalent class");
+            }
+            return new RLIntersectionOfImpl(this.node, this.enhGraph) {
                 @Override
                 public Stream<OntClass> components() {
                     return res.stream();
@@ -938,32 +1133,71 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
         }
 
         @Override
+        public boolean canAsEquivalentClass() {
+            return hasMemberEquivalentClasses();
+        }
+
+        @Override
         public OntClass asAssertionClass() {
-            return asSuperClass();
+            return asSuperClass(() -> "Specification does not allow this class to be a type of individual");
+        }
+
+        @Override
+        public boolean canAsAssertionClass() {
+            return hasMemberSuperClasses();
         }
 
         @Override
         public OntClass asDisjointClass() {
-            return asSubClass();
+            return asSubClass(() -> "Specification does not allow this class to be a disjoint class");
         }
 
-        private Collection<OntClass> collectSubClasses() {
+        @Override
+        public boolean canAsDisjointClass() {
+            return hasMemberSubClasses();
+        }
+
+        private OntClass asSuperClass(Supplier<String> message) {
+            Collection<OntClass> res = collectMemberSuperClasses();
+            if (res.isEmpty()) {
+                throw new OntJenaException.Unsupported(message.get());
+            }
+            return new RLIntersectionOfImpl(this.node, this.enhGraph) {
+                @Override
+                public Stream<OntClass> components() {
+                    return res.stream();
+                }
+            };
+        }
+
+        private OntClass asSubClass(Supplier<String> message) {
+            Collection<OntClass> res = collectMemberSubClasses();
+            if (res.isEmpty()) {
+                throw new OntJenaException.Unsupported(message.get());
+            }
+            return new RLIntersectionOfImpl(this.node, this.enhGraph) {
+                @Override
+                public Stream<OntClass> components() {
+                    return res.stream();
+                }
+            };
+        }
+
+        private Collection<OntClass> collectMemberSubClasses() {
             Set<OntClass> res = new LinkedHashSet<>();
             getList().members().forEach(it -> {
-                OntClass sub = it.asSubClass();
-                if (sub != null) {
-                    res.add(sub);
+                if (it.canAsSubClass()) {
+                    res.add(it.asSubClass());
                 }
             });
             return res.size() > 1 ? res : List.of();
         }
 
-        private Collection<OntClass> collectSuperClasses() {
+        private Collection<OntClass> collectMemberSuperClasses() {
             Set<OntClass> res = new LinkedHashSet<>();
             getList().members().forEach(it -> {
-                OntClass sub = it.asSuperClass();
-                if (sub != null) {
-                    res.add(sub);
+                if (it.canAsSuperClass()) {
+                    res.add(it.asSuperClass());
                 }
             });
             return res.size() > 1 ? res : List.of();
@@ -972,12 +1206,29 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
         private Collection<OntClass> collectEquivalentClasses() {
             Set<OntClass> res = new LinkedHashSet<>();
             getList().members().forEach(it -> {
-                OntClass sub = it.asEquivalentClass();
-                if (sub != null) {
-                    res.add(sub);
+                if (it.canAsEquivalentClass()) {
+                    res.add(it.asEquivalentClass());
                 }
             });
             return res.size() > 1 ? res : List.of();
+        }
+
+        private boolean hasMemberSubClasses() {
+            try (Stream<OntClass> members = getList().members().filter(OntClass::canAsSubClass)) {
+                return Iterators.hasAtLeast(members.iterator(), 2);
+            }
+        }
+
+        private boolean hasMemberSuperClasses() {
+            try (Stream<OntClass> members = getList().members().filter(OntClass::canAsSuperClass)) {
+                return Iterators.hasAtLeast(members.iterator(), 2);
+            }
+        }
+
+        private boolean hasMemberEquivalentClasses() {
+            try (Stream<OntClass> members = getList().members().filter(OntClass::canAsEquivalentClass)) {
+                return Iterators.hasAtLeast(members.iterator(), 2);
+            }
         }
     }
 
@@ -999,12 +1250,32 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
 
         @Override
         public OntClass asSuperClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a superclass");
+        }
+
+        @Override
+        public boolean canAsSuperClass() {
+            return false;
+        }
+
+        @Override
+        public OntClass asAssertionClass() {
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a type of individual");
+        }
+
+        @Override
+        public boolean canAsAssertionClass() {
+            return false;
         }
 
         @Override
         public OntClass asEquivalentClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be an equivalent class");
+        }
+
+        @Override
+        public boolean canAsEquivalentClass() {
+            return false;
         }
     }
 
@@ -1051,17 +1322,32 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
 
         @Override
         public OntClass asSubClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a subclass");
+        }
+
+        @Override
+        public boolean canAsSubClass() {
+            return false;
         }
 
         @Override
         public OntClass asEquivalentClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be an equivalent class");
+        }
+
+        @Override
+        public boolean canAsEquivalentClass() {
+            return false;
         }
 
         @Override
         public OntClass asDisjointClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a disjoint class");
+        }
+
+        @Override
+        public boolean canAsDisjointClass() {
+            return false;
         }
     }
 
@@ -1085,17 +1371,32 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
 
         @Override
         public OntClass asSubClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a subclass");
+        }
+
+        @Override
+        public boolean canAsSubClass() {
+            return false;
         }
 
         @Override
         public OntClass asEquivalentClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be an equivalent class");
+        }
+
+        @Override
+        public boolean canAsEquivalentClass() {
+            return false;
         }
 
         @Override
         public OntClass asDisjointClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a disjoint class");
+        }
+
+        @Override
+        public boolean canAsDisjointClass() {
+            return false;
         }
     }
 
@@ -1151,29 +1452,96 @@ public abstract class OntClassImpl extends OntObjectImpl implements OntClass {
         }
     }
 
-    public static class RLQLComplementOfImpl extends ComplementOfImpl {
-        public RLQLComplementOfImpl(Node n, EnhGraph m) {
+    public static class QLComplementOfImpl extends ComplementOfImpl {
+        public QLComplementOfImpl(Node n, EnhGraph m) {
             super(n, m);
         }
 
         @Override
         public OntClass asSubClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a subclass");
+        }
+
+        @Override
+        public boolean canAsSubClass() {
+            return false;
+        }
+
+        @Override
+        public boolean canAsSuperClass() {
+            return getValue().canAsSubClass();
         }
 
         @Override
         public OntClass asAssertionClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be an individual type");
+        }
+
+        @Override
+        public boolean canAsAssertionClass() {
+            return false;
+        }
+    }
+
+    public static class RLComplementOfImpl extends ComplementOfImpl {
+        public RLComplementOfImpl(Node n, EnhGraph m) {
+            super(n, m);
+        }
+
+        @Override
+        public OntClass asSubClass() {
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a subclass");
+        }
+
+        @Override
+        public boolean canAsSubClass() {
+            return false;
+        }
+
+        @Override
+        public OntClass asSuperClass() {
+            if (getValue().canAsSubClass()) {
+                return this;
+            }
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be an super class");
+        }
+
+        @Override
+        public boolean canAsSuperClass() {
+            return getValue().canAsSubClass();
+        }
+
+        @Override
+        public OntClass asAssertionClass() {
+            if (getValue().canAsSubClass()) {
+                return this;
+            }
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be an individual type");
+        }
+
+        @Override
+        public boolean canAsAssertionClass() {
+            return getValue().canAsSubClass();
         }
 
         @Override
         public OntClass asEquivalentClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be an equivalent class");
+        }
+
+        @Override
+        public boolean canAsEquivalentClass() {
+            return false;
         }
 
         @Override
         public OntClass asDisjointClass() {
-            return null;
+            throw new OntJenaException.Unsupported("Specification does not allow this class to be a disjoint class");
+        }
+
+        @Override
+        public boolean canAsDisjointClass() {
+            return false;
         }
     }
 

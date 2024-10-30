@@ -22,6 +22,7 @@ import org.apache.jena.ontapi.model.OntAnnotationProperty;
 import org.apache.jena.ontapi.model.OntClass;
 import org.apache.jena.ontapi.model.OntDataProperty;
 import org.apache.jena.ontapi.model.OntDataRange;
+import org.apache.jena.ontapi.model.OntDisjoint;
 import org.apache.jena.ontapi.model.OntEntity;
 import org.apache.jena.ontapi.model.OntIndividual;
 import org.apache.jena.ontapi.model.OntModel;
@@ -48,6 +49,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -136,10 +138,13 @@ public class OntModelOWL2ELSpecTest {
         Assertions.assertFalse(p1.isFunctional());
 
         Assertions.assertThrows(OntJenaException.Unsupported.class, () -> p1.setAsymmetric(true));
-        p1.addInverseProperty(p2);
-        if (spec == TestSpec.OWL2_EL_MEM_RDFS_INF) {
-            Assertions.assertEquals(17, m.properties().count());
+        if (spec.isOWL2EL()) {
+            Assertions.assertThrows(OntJenaException.Unsupported.class, () -> p1.addInverseProperty(p2));
+            if (spec == TestSpec.OWL2_EL_MEM_RDFS_INF) {
+                Assertions.assertEquals(17, m.properties().count());
+            }
         } else {
+            p1.addInverseProperty(p2);
             Assertions.assertEquals(3, m.properties().count());
         }
     }
@@ -212,9 +217,9 @@ public class OntModelOWL2ELSpecTest {
         Resource c0 = m.createResource("C", OWL2.Class);
         Resource i1 = m.createResource("i1", c0);
         Resource i2 = m.createResource("i2", c0);
-        Resource c1 = m.createResource().addProperty(RDF.type, OWL2.Class).addProperty(OWL2.oneOf, m.createList());
-        Resource c2 = m.createResource().addProperty(RDF.type, OWL2.Class).addProperty(OWL2.oneOf, m.createList(i1));
-        Resource c3 = m.createResource().addProperty(RDF.type, OWL2.Class).addProperty(OWL2.oneOf, m.createList(i1, i2));
+        m.createResource().addProperty(RDF.type, OWL2.Class).addProperty(OWL2.oneOf, m.createList());
+        m.createResource().addProperty(RDF.type, OWL2.Class).addProperty(OWL2.oneOf, m.createList(i1));
+        m.createResource().addProperty(RDF.type, OWL2.Class).addProperty(OWL2.oneOf, m.createList(i1, i2));
 
         OntModel om = OntModelFactory.createModel(m.getGraph(), spec.inst);
         OntIndividual oi1 = Objects.requireNonNull(om.getIndividual("i1"));
@@ -237,9 +242,9 @@ public class OntModelOWL2ELSpecTest {
         Model m = ModelFactory.createDefaultModel();
         Literal v1 = m.createTypedLiteral(42);
         Literal v2 = m.createTypedLiteral("42");
-        Resource c1 = m.createResource().addProperty(RDF.type, RDFS.Datatype).addProperty(OWL2.oneOf, m.createList());
-        Resource c2 = m.createResource().addProperty(RDF.type, RDFS.Datatype).addProperty(OWL2.oneOf, m.createList(v1));
-        Resource c3 = m.createResource().addProperty(RDF.type, RDFS.Datatype).addProperty(OWL2.oneOf, m.createList(v1, v2));
+        m.createResource().addProperty(RDF.type, RDFS.Datatype).addProperty(OWL2.oneOf, m.createList());
+        m.createResource().addProperty(RDF.type, RDFS.Datatype).addProperty(OWL2.oneOf, m.createList(v1));
+        m.createResource().addProperty(RDF.type, RDFS.Datatype).addProperty(OWL2.oneOf, m.createList(v1, v2));
 
         OntModel om = OntModelFactory.createModel(m.getGraph(), spec.inst);
         OntDataRange.OneOf oc2 = om.ontObjects(OntDataRange.OneOf.class).findFirst().orElseThrow(AssertionError::new);
@@ -283,5 +288,90 @@ public class OntModelOWL2ELSpecTest {
                         () -> it.inModel(m).as(OntEntity.class),
                         "wrong result for " + it)
                 );
+    }
+
+    @ParameterizedTest
+    @EnumSource(names = {
+            "OWL2_EL_MEM",
+            "OWL2_EL_MEM_RDFS_INF",
+            "OWL2_EL_MEM_TRANS_INF",
+    })
+    public void testHasKey(TestSpec spec) {
+        OntModel m = OntModelFactory.createModel(spec.inst);
+        OntClass a = m.createOntClass("a");
+        OntDataProperty p1 = m.createDataProperty("p1");
+        OntDataProperty p2 = m.createDataProperty("p2");
+        a.addHasKey(p1, p2);
+        Assertions.assertEquals(1L, a.hasKeys().count());
+        a.removeHasKey(null);
+        Assertions.assertEquals(0L, a.hasKeys().count());
+    }
+
+    @ParameterizedTest
+    @EnumSource(names = {
+            "OWL2_EL_MEM",
+            "OWL2_EL_MEM_RDFS_INF",
+            "OWL2_EL_MEM_TRANS_INF",
+    })
+    public void testDifferentIndividuals(TestSpec spec) {
+        OntModel data = OntModelFactory.createModel();
+        data.createDifferentIndividuals(data.createIndividual("a"));
+        data.createResource()
+                .addProperty(RDF.type, OWL2.AllDifferent)
+                .addProperty(OWL2.members, data.createList());
+        data.createDifferentIndividuals(data.createIndividual("b"), data.createIndividual("c"));
+
+        OntModel m = OntModelFactory.createModel(data.getGraph(), spec.inst);
+
+        List<OntDisjoint.Individuals> res1 = m.ontObjects(OntDisjoint.Individuals.class).toList();
+        Assertions.assertEquals(1, res1.size());
+        Assertions.assertEquals(
+                Set.of("b", "c"),
+                res1.get(0).members().map(Resource::getURI).collect(Collectors.toSet())
+        );
+
+        Assertions.assertThrows(
+                OntJenaException.Unsupported.class,
+                () -> m.createDifferentIndividuals(m.createIndividual("d"))
+        );
+
+        m.createDifferentIndividuals(m.createIndividual("e"), m.createIndividual("f"), m.createIndividual("g"));
+
+        List<OntDisjoint.Individuals> res2 = m.ontObjects(OntDisjoint.Individuals.class).toList();
+        Assertions.assertEquals(2, res2.size());
+    }
+
+    @ParameterizedTest
+    @EnumSource(names = {
+            "OWL2_EL_MEM",
+            "OWL2_EL_MEM_RDFS_INF",
+            "OWL2_EL_MEM_TRANS_INF",
+    })
+    public void testDisjointClasses(TestSpec spec) {
+        OntModel data = OntModelFactory.createModel();
+        data.createDisjointClasses(data.createOntClass("a"));
+        data.createResource()
+                .addProperty(RDF.type, OWL2.AllDisjointClasses)
+                .addProperty(OWL2.members, data.createList());
+        data.createDisjointClasses(data.createOntClass("b"), data.createOntClass("c"));
+
+        OntModel m = OntModelFactory.createModel(data.getGraph(), spec.inst);
+
+        List<OntDisjoint.Classes> res1 = m.ontObjects(OntDisjoint.Classes.class).toList();
+        Assertions.assertEquals(1, res1.size());
+        Assertions.assertEquals(
+                Set.of("b", "c"),
+                res1.get(0).members().map(Resource::getURI).collect(Collectors.toSet())
+        );
+
+        Assertions.assertThrows(
+                OntJenaException.Unsupported.class,
+                () -> m.createDisjointClasses(m.createOntClass("d"))
+        );
+
+        m.createDisjointClasses(m.createOntClass("e"), m.createOntClass("f"), m.createOntClass("g"));
+
+        List<OntDisjoint.Classes> res2 = m.ontObjects(OntDisjoint.Classes.class).toList();
+        Assertions.assertEquals(2, res2.size());
     }
 }

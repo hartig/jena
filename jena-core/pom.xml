@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.jena</groupId>
     <artifactId>jena</artifactId>
-    <version>5.1.0-SNAPSHOT</version>
+    <version>5.3.0-SNAPSHOT</version>
   </parent>
 
   <description>Jena is a Java framework for building Semantic Web applications. It provides a programmatic environment for RDF, RDFS and OWL, SPARQL and includes a rule-based inference engine.</description>
@@ -40,13 +40,13 @@
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-base</artifactId>
-      <version>5.1.0-SNAPSHOT</version>
+      <version>5.3.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-base</artifactId>
-      <version>5.1.0-SNAPSHOT</version>
+      <version>5.3.0-SNAPSHOT</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -54,7 +54,7 @@
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-iri</artifactId>
-      <version>5.1.0-SNAPSHOT</version>
+      <version>5.3.0-SNAPSHOT</version>
     </dependency>
     
     <dependency>
@@ -130,15 +130,25 @@
         <artifactId>maven-resources-plugin</artifactId>
       </plugin>
 
+      <!-- Contract tests use mockito -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
+          <argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
           <includes>
             <include>org/apache/jena/test/TestPackage_core.java</include>
             <include>**/*_CS.java</include>
           </includes>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <!-- Set resolved artifact properties -->
+        <executions>
+          <execution><goals><goal>properties</goal></goals></execution>
+        </executions>
       </plugin>
 
       <plugin>
